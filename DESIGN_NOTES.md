@@ -374,9 +374,36 @@ verifying instructor — keeping the cast consistent.
 
 ### Things still gimmicks (intentional)
 - Top navbar's search input (instructor & global).
-- Export CSV / Trends buttons on Batch Attendance.
 - Notification bell badge.
-- The "View" button on each batch learner row (could route to learner-specific attendance info; left as gimmick for now).
+
+---
+
+## Feedback applied (round 9 — 16 May 2026) — Instructor Batch Attendance redesigned
+
+The old `BatchPage` was a table-style list of 24 learners with attendance %, progress bars, and a weekly heatmap. Per request, replaced it with the **same UI as admin's Attendance Info page**, so the instructor's batch view feels identical to the coordinator's view of a learner from the inside.
+
+### What changed in `src/Instructor.jsx`
+- Added the data the page needs (kept self-contained per the file convention):
+  - `LEARNER_MAY_2026` — 16-day calendar for the focused learner (Aarav's pattern: P/L/A/R/C/HD/IP mix, matches admin)
+  - `DAYS` — per-day detail map (event / summary / full) — same shape as admin
+  - `TODAY_DETAIL` — full 16 May entry with sessions + swipes
+  - `DEFAULT_LEARNER` — Aarav as the default focus
+- Added the admin's component set (renamed only where there were collisions):
+  - `KPI`, `InfoField`, `FilterChip` (admin's "Pill" — renamed to avoid collision with my existing `Pill`)
+  - `CalendarGrid` (full month grid with prev/next, today badge, pulse on in-progress, stripe on cancelled)
+  - `DayDetailPanel` with three modes (`event` / `summary` / `full`) and the verification banner + note treatment
+  - `SessionsTable` (4-cell metric grid per session)
+  - `SwipesTable` (Type / Swipe Time / Location / Action with the geofence proof + monospace timestamps)
+  - `SwipeDetailsModal` (modal with conditional Verified-by line: instructor visual check for IN, geofence-only for OUT)
+  - `InsightsModal` (6 KPI cards + proportional status-distribution bar)
+  - `TableView` (alternate flat list with `View ›`)
+  - `AttendanceLegend`
+- Updated `StatusChip` to accept a `large` prop (was sm-only).
+- Rewrote `BatchPage`: now matches admin's Attendance Info one-to-one — filter bar (Batch / Month pills + Calendar/Table toggle), Learner header card with **Switch learner search across all 24 batch members**, KPI strip (5 cards), Calendar+DayDetail or Table view, Legend, and the two modals.
+- Selecting a learner from the search updates the header + KPI numbers (attendance%, days present, avg study hrs, below-threshold count). For prototype scope the underlying calendar/swipes data stays the same (Aarav's pattern) regardless of which learner is selected — same prototype trade-off as admin.
+
+### Net effect
+The instructor's **Batch Attendance** page is now functionally and visually the same experience as the admin's **Attendance Info** — same calendar, same day detail panel (with sessions table, swipes table, geofence-proof modal, insights bar), same legend. The only differences are the page title ("Batch Attendance" vs "Attendance Info") and that the switch-learner search is scoped to the 24 learners Priya teaches.
 
 ---
 

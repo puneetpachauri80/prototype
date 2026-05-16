@@ -203,6 +203,75 @@ const REVIEW_QUEUE_INITIAL = [
 // Priya's own regularization history.
 const MY_REGS_INITIAL = [];
 
+// ─── Data for Batch Attendance page (per-learner view) ──────
+// This mirrors the admin's Attendance Info page: when the instructor opens
+// any learner from the batch, they see this exact layout/data.
+
+const LEARNER_MAY_2026 = [
+  { d:1,  s:"H",  note:"Labour Day" },
+  { d:2,  s:"P" },
+  { d:3,  s:"W" },
+  { d:4,  s:"P" },
+  { d:5,  s:"L",  note:"Late · 18m" },
+  { d:6,  s:"P" },
+  { d:7,  s:"P" },
+  { d:8,  s:"P" },
+  { d:9,  s:"P" },
+  { d:10, s:"W" },
+  { d:11, s:"A",  note:"No-show" },
+  { d:12, s:"R",  note:"Approved" },
+  { d:13, s:"P" },
+  { d:14, s:"C",  note:"Cancelled" },
+  { d:15, s:"HD", note:"Left 10:32" },
+  { d:16, s:"IP", note:"In session" },
+];
+
+const TODAY_DETAIL = {
+  kind:"full",
+  date:"16 May 2026", weekday:"Saturday", status:"IP",
+  scheme:SCHEME, schedule:SCHEDULE,
+  processedAt:"16 May 2026, 11:33 AM (live · attendance still rolling)",
+  firstIn:"08:58 AM", lastOut:"—", studyHrs:"1h 57m",
+  lateBy:"2 min",
+  verification:"Session 1 verified by Priya Kothari · Session 2 verification pending",
+  sessions:[
+    { id:1, name:"Brand Strategy Foundations",   timing:"09:00 – 11:00", signIn:"08:58:42", signOut:"10:55:11", lateBy:"0 min", verifiedBy:"Priya K.", status:"Present"     },
+    { id:2, name:"AI in Performance Marketing",  timing:"11:30 – 13:00", signIn:"11:32:09", signOut:"—",        lateBy:"2 min", verifiedBy:"Pending",  status:"In Progress" },
+  ],
+  swipes:[
+    { id:"sw1", type:"IN",  time:"08:58:42", session:1, status:"verified", lat:28.45947, lng:77.02671, dist:"12 m", verifiedBy:"Priya Kothari" },
+    { id:"sw2", type:"OUT", time:"10:55:11", session:1, status:"verified", lat:28.45951, lng:77.02668, dist:"8 m",  verifiedBy:null },
+    { id:"sw3", type:"IN",  time:"11:32:09", session:2, status:"verified", lat:28.45945, lng:77.02674, dist:"15 m", verifiedBy:"Priya Kothari" },
+    { id:"sw4", type:"OUT", time:null,       session:2, status:"pending",  lat:null,     lng:null,     dist:null,   verifiedBy:null },
+  ],
+};
+
+const DAYS = {
+  1:  { kind:"event",   date:"01 May 2026", weekday:"Friday",    status:"H",  title:"Labour Day", note:"Public holiday — no classes scheduled." },
+  2:  { kind:"summary", date:"02 May 2026", weekday:"Saturday",  status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"02 May 2026, 13:08 PM", firstIn:"08:55 AM", lastOut:"12:58 PM", studyHrs:"3h 58m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  3:  { kind:"event",   date:"03 May 2026", weekday:"Sunday",    status:"W",  title:"Weekend", note:"No classes scheduled on Sundays." },
+  4:  { kind:"summary", date:"04 May 2026", weekday:"Monday",    status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"04 May 2026, 13:11 PM", firstIn:"08:57 AM", lastOut:"13:02 PM", studyHrs:"4h 04m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  5:  { kind:"summary", date:"05 May 2026", weekday:"Tuesday",   status:"L",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"05 May 2026, 13:06 PM", firstIn:"09:18 AM", lastOut:"13:01 PM", studyHrs:"3h 40m", lateBy:"18 min", verification:"Both sessions verified by Priya Kothari", note:"Sign-in for Session 1 was 18 minutes after start. Counts as Late." },
+  6:  { kind:"summary", date:"06 May 2026", weekday:"Wednesday", status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"06 May 2026, 13:10 PM", firstIn:"08:59 AM", lastOut:"13:00 PM", studyHrs:"4h 01m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  7:  { kind:"summary", date:"07 May 2026", weekday:"Thursday",  status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"07 May 2026, 13:07 PM", firstIn:"08:55 AM", lastOut:"12:59 PM", studyHrs:"4h 04m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  8:  { kind:"summary", date:"08 May 2026", weekday:"Friday",    status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"08 May 2026, 13:09 PM", firstIn:"08:58 AM", lastOut:"13:01 PM", studyHrs:"4h 03m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  9:  { kind:"summary", date:"09 May 2026", weekday:"Saturday",  status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"09 May 2026, 13:05 PM", firstIn:"08:56 AM", lastOut:"12:58 PM", studyHrs:"4h 02m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  10: { kind:"event",   date:"10 May 2026", weekday:"Sunday",    status:"W",  title:"Weekend", note:"No classes scheduled on Sundays." },
+  11: { kind:"event",   date:"11 May 2026", weekday:"Monday",    status:"A",  title:"Absent — no sign-in received", note:"Geofence proximity was not confirmed at the start of either Session 1 (09:00) or Session 2 (11:30). Counts as 1 absent day toward the attendance threshold.", regularization:true },
+  12: { kind:"summary", date:"12 May 2026", weekday:"Tuesday",   status:"R",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"13 May 2026, 10:14 AM (regularized)", firstIn:"Manual mark", lastOut:"Manual mark", studyHrs:"3h 58m (regularized)", lateBy:"—", verification:"Regularization approved by Priya Kothari", note:"Originally marked Absent. Regularization request approved on 13 May based on instructor confirmation of physical presence." },
+  13: { kind:"summary", date:"13 May 2026", weekday:"Wednesday", status:"P",  scheme:SCHEME, schedule:SCHEDULE, processedAt:"13 May 2026, 13:08 PM", firstIn:"08:59 AM", lastOut:"13:01 PM", studyHrs:"4h 02m", lateBy:"0 min", verification:"Both sessions verified by Priya Kothari" },
+  14: { kind:"event",   date:"14 May 2026", weekday:"Thursday",  status:"C",  title:"Session Cancelled", note:"Cancelled by Program Coordinator on 13 May 2026. Reason: Instructor emergency. Excluded from attendance %." },
+  15: { kind:"summary", date:"15 May 2026", weekday:"Friday",    status:"HD", scheme:SCHEME, schedule:SCHEDULE, processedAt:"15 May 2026, 13:00 PM", firstIn:"08:59 AM", lastOut:"10:32 AM", studyHrs:"1h 32m", lateBy:"0 min", verification:"Session 1 verified by Priya Kothari", note:"Early departure at 10:32 AM. Attended less than 50% of scheduled time — counts as Half Day." },
+  16: TODAY_DETAIL,
+};
+
+const DEFAULT_LEARNER = {
+  name:"Aarav Sharma", rollNo:"L-2026-0143", avatar:"AS",
+  batch:"PGP AI-Led Marketing · Batch 1",
+  attendancePct:92, present:11, total:12,
+  avgStudyHrs:"3h 35m", belowThreshold:0,
+};
+
 // ═══════════════════════════════════════════════════════════════
 // SHARED UI HELPERS
 // ═══════════════════════════════════════════════════════════════
@@ -221,15 +290,18 @@ function AttStatusChip({ status, sm }) {
   );
 }
 
-function StatusChip({ code }) {
+function StatusChip({ code, large }) {
   const c = STATUS[code]; if (!c) return null;
   return (
     <span style={{
-      display:"inline-flex", alignItems:"center", gap:5,
-      padding:"3px 9px", borderRadius:20, fontSize:11, fontWeight:700,
+      display:"inline-flex", alignItems:"center", gap:6,
+      padding: large ? "5px 12px" : "3px 9px",
+      borderRadius:20,
+      fontSize: large ? 12 : 11,
+      fontWeight:700,
       background:c.bg, color:c.fg, border:`1px solid ${c.border}`,
     }}>
-      <span style={{ width:5, height:5, borderRadius:"50%", background:c.fg }}/>{c.label}
+      <span style={{ width: large ? 6 : 5, height: large ? 6 : 5, borderRadius:"50%", background:c.fg }}/>{c.label}
     </span>
   );
 }
@@ -819,148 +891,631 @@ function LearnerRow({ a, learner, onAction }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// BATCH ATTENDANCE PAGE
+// ATTENDANCE INFO COMPONENTS (used by Batch Attendance — mirror admin)
 // ═══════════════════════════════════════════════════════════════
-function BatchPage() {
-  const [search, setSearch] = useState("");
-  const [sort, setSort]     = useState("pct-desc");
-  const [filter, setFilter] = useState("all");
 
-  // Mock weekly pattern per learner (5 class days of the week)
-  // pattern: array of statuses for Mon-Fri (or Sat).
-  // We'll derive a deterministic pattern from each learner's pct.
-  const pattern = (pct) => {
-    if (pct >= 95) return ["P","P","P","P","P","P"];
-    if (pct >= 85) return ["P","P","L","P","P","P"];
-    if (pct >= 75) return ["P","P","A","P","L","P"];
-    if (pct >= 65) return ["A","P","L","P","A","P"];
-    return ["A","P","A","L","A","P"];
-  };
+function KPI({ label, value, sub, accent, onClick, highlight }) {
+  return (
+    <div onClick={onClick}
+      style={{
+        flex:"1 1 180px", background:T.white,
+        border:`1px solid ${highlight?T.kraft+"50":T.border}`,
+        borderRadius:T.radiusSm, padding:"14px 16px",
+        boxShadow:T.shadow, cursor:onClick?"pointer":"default",
+        transition:"all 0.2s",
+        ...(highlight ? { background:T.kraftPale } : {}),
+      }}
+      onMouseEnter={onClick?(e=>{e.currentTarget.style.boxShadow=T.shadowHover;e.currentTarget.style.transform="translateY(-1px)"}):undefined}
+      onMouseLeave={onClick?(e=>{e.currentTarget.style.boxShadow=T.shadow;e.currentTarget.style.transform="translateY(0)"}):undefined}>
+      <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1 }}>{label}</p>
+      <p style={{ fontSize:24, fontWeight:800, color:accent||T.navy, marginTop:6, lineHeight:1.1 }}>{value}</p>
+      {sub && <p style={{ fontSize:11, color:T.textSec, marginTop:4 }}>{sub}</p>}
+    </div>
+  );
+}
 
-  const list = BATCH_LEARNERS
-    .filter(l => filter === "all" || (filter === "at-risk" && l.attendancePct < 80) || (filter === "top" && l.attendancePct >= 95))
-    .filter(l => !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.rollNo.toLowerCase().includes(search.toLowerCase()))
-    .sort((a,b) => {
-      if (sort === "pct-desc") return b.attendancePct - a.attendancePct;
-      if (sort === "pct-asc")  return a.attendancePct - b.attendancePct;
-      if (sort === "name")     return a.name.localeCompare(b.name);
-      return 0;
-    });
+function InfoField({ label, value, mono, span }) {
+  return (
+    <div style={{ gridColumn:span===2?"span 2":undefined }}>
+      <p style={{ fontSize:11, fontWeight:600, color:T.textMuted, marginBottom:3 }}>{label}</p>
+      <div style={{ fontSize:13, color:T.navy, fontWeight:500, fontFamily:mono?"ui-monospace, SFMono-Regular, monospace":undefined, wordBreak:"break-word" }}>{value || "—"}</div>
+    </div>
+  );
+}
+
+function FilterChip({ icon, label, onClick }) {
+  return (
+    <span onClick={onClick}
+      style={{
+        display:"inline-flex", alignItems:"center", gap:6, padding:"7px 12px",
+        borderRadius:8, background:T.white, border:`1px solid ${T.border}`,
+        fontSize:12, fontWeight:600, color:T.navyLight,
+        cursor:onClick?"pointer":"default", transition:"all 0.15s",
+      }}
+      onMouseEnter={onClick?(e=>e.currentTarget.style.borderColor=T.kraft+"55"):undefined}
+      onMouseLeave={onClick?(e=>e.currentTarget.style.borderColor=T.border):undefined}>
+      <span style={{ opacity:0.7 }}>{icon}</span>{label}
+    </span>
+  );
+}
+
+const navBtnStyle = {
+  display:"inline-flex", alignItems:"center", gap:5, padding:"6px 12px", borderRadius:8,
+  border:`1px solid ${T.border}`, background:T.white, fontSize:12, fontWeight:600,
+  color:T.textSec, cursor:"pointer", fontFamily:FONT,
+};
+
+const toggleBtn = (active) => ({
+  padding:"6px 14px", borderRadius:6, border:"none",
+  fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:FONT,
+  background: active ? T.white : "transparent",
+  color: active ? T.kraft : T.textSec,
+  boxShadow: active ? "0 1px 2px rgba(27,37,89,0.06)" : "none",
+});
+
+// ─── CalendarGrid (full version, matches admin) ─────────────
+function CalendarGrid({ data, selected, onSelect, today }) {
+  const map = Object.fromEntries(data.map(x=>[x.d,x]));
+  const startCol = 5; // May 1 2026 = Friday in Sun-Sat indexing
+  const totalDays = 31;
+  const cells = [];
+  for (let i=0;i<startCol;i++) cells.push(null);
+  for (let d=1;d<=totalDays;d++) cells.push(d);
+  while (cells.length%7!==0) cells.push(null);
 
   return (
-    <div style={{ animation:"fadeIn 0.35s ease" }}>
-      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18, flexWrap:"wrap", gap:12 }}>
-        <div>
-          <h2 style={{ fontSize:22, fontWeight:700, color:T.navy }}>Batch Attendance</h2>
-          <p style={{ fontSize:14, color:T.textSec, marginTop:4 }}>
-            PGP AI-Led Marketing · Batch 1 · 24 learners · avg attendance <strong style={{ color:T.green }}>88%</strong>
-          </p>
+    <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, overflow:"hidden" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px", borderBottom:`1px solid ${T.border}` }}>
+        <button style={navBtnStyle}>‹ Prev</button>
+        <div style={{ textAlign:"center" }}>
+          <h3 style={{ fontSize:16, fontWeight:700, color:T.navy }}>May 2026</h3>
+          <p style={{ fontSize:11, color:T.textMuted, marginTop:1 }}>13 scheduled · 11 attended · 1 absent · 1 cancelled</p>
         </div>
-        <div style={{ display:"flex", gap:8 }}>
-          <Btn variant="ghost" icon={I.filter}>Export CSV</Btn>
-          <Btn variant="ghost" icon={I.trend}>Trends</Btn>
-        </div>
+        <button style={navBtnStyle}>Next ›</button>
       </div>
-
-      {/* Filter chips */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12, gap:10, flexWrap:"wrap" }}>
-        <div style={{ display:"flex", gap:6 }}>
-          {[
-            { id:"all",     l:"All learners", count:24 },
-            { id:"top",     l:"Top performers (≥95%)", count:BATCH_LEARNERS.filter(l=>l.attendancePct>=95).length },
-            { id:"at-risk", l:"At risk (<80%)", count:BATCH_LEARNERS.filter(l=>l.attendancePct<80).length },
-          ].map(f => (
-            <button key={f.id} onClick={()=>setFilter(f.id)} style={{
-              padding:"6px 12px", borderRadius:8, border:`1px solid ${filter===f.id ? T.kraft : T.border}`,
-              background: filter===f.id ? T.kraft : T.white,
-              color: filter===f.id ? "#fff" : T.navyLight,
-              fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:FONT,
-              display:"inline-flex", alignItems:"center", gap:6,
-            }}>
-              {f.l}
-              <span style={{ padding:"1px 6px", borderRadius:10, fontSize:10, fontWeight:800,
-                background: filter===f.id ? "rgba(255,255,255,0.25)" : T.borderLight,
-                color: filter===f.id ? "#fff" : T.textSec }}>{f.count}</span>
-            </button>
-          ))}
-        </div>
-        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, background:T.white, borderRadius:8, padding:"6px 12px", border:`1px solid ${T.border}`, minWidth:220 }}>
-            <span style={{ color:T.textMuted }}>{I.search}</span>
-            <input placeholder="Search learner..." value={search} onChange={e=>setSearch(e.target.value)}
-              style={{ border:"none", outline:"none", background:"transparent", fontSize:12, color:T.text, width:"100%", fontFamily:FONT }}/>
-          </div>
-          <select value={sort} onChange={e=>setSort(e.target.value)} style={{
-            padding:"7px 12px", borderRadius:8, border:`1px solid ${T.border}`, background:T.white,
-            fontSize:12, color:T.navyLight, fontFamily:FONT, cursor:"pointer", fontWeight:600,
-          }}>
-            <option value="pct-desc">Attendance % (high → low)</option>
-            <option value="pct-asc">Attendance % (low → high)</option>
-            <option value="name">Name (A → Z)</option>
-          </select>
-        </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", borderBottom:`1px solid ${T.border}`, background:T.bg }}>
+        {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(w=>(
+          <div key={w} style={{ padding:"9px 0", textAlign:"center", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1 }}>{w}</div>
+        ))}
       </div>
-
-      {/* Table */}
-      <div style={{ background:T.white, borderRadius:T.radius, border:`1px solid ${T.border}`, boxShadow:T.shadow, overflow:"hidden" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"40px 1fr 140px 220px 120px 100px", padding:"12px 20px", background:T.bg, borderBottom:`1px solid ${T.border}`, fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1 }}>
-          <span/>
-          <span>Learner</span>
-          <span>Attendance %</span>
-          <span>This week (M–S)</span>
-          <span>Days Present</span>
-          <span style={{ textAlign:"right" }}>Action</span>
-        </div>
-
-        {list.map(l => {
-          const wk = pattern(l.attendancePct);
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)" }}>
+        {cells.map((d,i)=>{
+          if (d===null) return <div key={i} style={{ height:78, background:T.borderLight, borderRight:`1px solid ${T.border}`, borderBottom:`1px solid ${T.border}` }}/>;
+          const info = map[d];
+          const cfg = info ? STATUS[info.s] : null;
+          const isToday  = d===today;
+          const isSel    = d===selected;
+          const isFuture = d>today;
+          const clickable = !!info && !isFuture;
           return (
-            <div key={l.rollNo} style={{ display:"grid", gridTemplateColumns:"40px 1fr 140px 220px 120px 100px", padding:"12px 20px", borderTop:`1px solid ${T.borderLight}`, alignItems:"center" }}>
-              <div style={{ width:30, height:30, borderRadius:9, background:T.borderLight, color:T.navyLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800 }}>{l.avatar}</div>
-              <div style={{ minWidth:0, paddingRight:10 }}>
-                <p style={{ fontSize:13, fontWeight:600, color:T.navy, display:"flex", alignItems:"center", gap:8 }}>
-                  {l.name}
-                  {l.attendancePct < 80 && <Pill color="kraft" sm>AT-RISK</Pill>}
-                  {l.attendancePct >= 95 && <Pill color="green" sm>TOP</Pill>}
-                </p>
-                <p style={{ fontSize:11, color:T.textSec, marginTop:1 }}>{l.rollNo}</p>
+            <div key={i} onClick={()=>clickable && onSelect(d)}
+              style={{
+                height:78, padding:8, position:"relative",
+                borderRight:`1px solid ${T.border}`, borderBottom:`1px solid ${T.border}`,
+                cursor:clickable?"pointer":"default",
+                background:cfg?cfg.bg:T.white,
+                opacity:isFuture?0.4:1,
+                transition:"all 0.15s",
+                ...(isSel ? { boxShadow:`inset 0 0 0 2px ${T.kraft}` } : {}),
+                ...(cfg?.stripe ? { backgroundImage:"repeating-linear-gradient(45deg,rgba(130,143,176,0.18),rgba(130,143,176,0.18) 4px,transparent 4px,transparent 10px)" } : {}),
+              }}
+              onMouseEnter={e=>{ if(clickable && !isSel) e.currentTarget.style.filter="brightness(0.97)"; }}
+              onMouseLeave={e=>{ if(clickable && !isSel) e.currentTarget.style.filter="none"; }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <span style={{ fontSize:13, fontWeight:isToday?800:600, color:isToday?T.kraft:T.navy }}>{String(d).padStart(2,"0")}</span>
+                {isToday && <span style={{ fontSize:8, fontWeight:800, color:"#fff", background:T.kraft, padding:"1px 5px", borderRadius:4, letterSpacing:0.5 }}>TODAY</span>}
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:14, fontWeight:800, color:l.attendancePct >= 80 ? T.green : T.kraft }}>{l.attendancePct}%</span>
-                <div style={{ flex:1, height:6, borderRadius:3, background:T.borderLight, overflow:"hidden" }}>
-                  <div style={{ width:`${l.attendancePct}%`, height:"100%", background:l.attendancePct >= 80 ? T.green : T.kraft }}/>
-                </div>
-              </div>
-              <div style={{ display:"flex", gap:5 }}>
-                {wk.map((s,i) => (
-                  <div key={i} title={STATUS[s].label} style={{
-                    width:26, height:26, borderRadius:6,
-                    background:STATUS[s].bg, color:STATUS[s].fg,
-                    border:`1px solid ${STATUS[s].border}`,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    fontSize:10, fontWeight:800,
-                    ...(STATUS[s].stripe ? { backgroundImage:"repeating-linear-gradient(45deg,rgba(130,143,176,0.18),rgba(130,143,176,0.18) 3px,transparent 3px,transparent 7px)" } : {}),
-                  }}>{STATUS[s].code}</div>
-                ))}
-              </div>
-              <span style={{ fontSize:13, fontWeight:700, color:T.navy }}>
-                {Math.round(l.attendancePct/100 * 12)}/12
-              </span>
-              <div style={{ textAlign:"right" }}>
-                <Btn variant="ghost" sm>View</Btn>
-              </div>
+              {cfg && info.s!=="W" && (
+                <>
+                  <div style={{ marginTop:4, fontSize:20, fontWeight:800, color:cfg.fg, lineHeight:1, fontFamily:FONT }}>{cfg.code}</div>
+                  {info.note && <div style={{ fontSize:9, color:cfg.fg, opacity:0.9, fontWeight:600, marginTop:3, lineHeight:1.2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{info.note}</div>}
+                </>
+              )}
+              {info?.s==="W" && (
+                <div style={{ fontSize:10, color:cfg.fg, fontWeight:600, marginTop:18, textAlign:"center", letterSpacing:1 }}>WEEKEND</div>
+              )}
+              {cfg?.pulse && <span style={{ position:"absolute", top:6, right:6, width:7, height:7, borderRadius:"50%", background:cfg.fg, animation:"pulse 1.5s ease infinite" }}/>}
             </div>
           );
         })}
-
-        {list.length === 0 && (
-          <div style={{ padding:"60px 30px", textAlign:"center" }}>
-            <p style={{ fontSize:32, marginBottom:8 }}>🔍</p>
-            <p style={{ fontSize:14, fontWeight:700, color:T.navy }}>No learners match</p>
-            <p style={{ fontSize:12, color:T.textSec, marginTop:4 }}>Try a different filter or clear your search.</p>
-          </div>
-        )}
       </div>
+    </div>
+  );
+}
+
+// ─── DayDetailPanel ─────────────────────────────────────────
+function DayDetailPanel({ day, onSwipeClick }) {
+  if (!day) {
+    return (
+      <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, padding:"48px 24px", textAlign:"center" }}>
+        <p style={{ fontSize:13, color:T.textMuted }}>Select a class day in the calendar to view attendance details.</p>
+      </div>
+    );
+  }
+  const eventIcons = { H:"🎉", W:"🌙", C:"🚫", A:"⚠️" };
+
+  return (
+    <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+      <div style={{ padding:"16px 20px", borderBottom:`1px solid ${T.border}`, background:`linear-gradient(180deg,${T.bg},${T.white})` }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6, flexWrap:"wrap", gap:6 }}>
+          <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
+            <h3 style={{ fontSize:18, fontWeight:700, color:T.navy }}>{day.date}</h3>
+            <span style={{ fontSize:13, color:T.textSec }}>{day.weekday}</span>
+          </div>
+          <StatusChip code={day.status} large/>
+        </div>
+        {day.processedAt && <p style={{ fontSize:11, color:T.textMuted }}>Processed on {day.processedAt}</p>}
+      </div>
+
+      {day.kind === "event" && (
+        <div style={{ padding:"32px 24px", textAlign:"center", flex:1 }}>
+          <div style={{ fontSize:38, marginBottom:12 }}>{eventIcons[day.status] || "—"}</div>
+          <h4 style={{ fontSize:15, fontWeight:700, color:T.navy, marginBottom:8 }}>{day.title}</h4>
+          <p style={{ fontSize:12, color:T.textSec, lineHeight:1.55, maxWidth:340, margin:"0 auto" }}>{day.note}</p>
+          {day.regularization && (
+            <div style={{ marginTop:18, padding:"10px 14px", background:T.kraftPale, borderRadius:10, border:`1px solid ${T.kraft}30`, textAlign:"left" }}>
+              <p style={{ fontSize:11, color:T.kraftDark, lineHeight:1.5 }}>
+                <strong>Regularization eligible:</strong> the learner can file a request within 48h of the session. Review it from the Regularization tab.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(day.kind === "summary" || day.kind === "full") && (
+        <>
+          <div style={{ padding:"12px 20px", borderBottom:`1px solid ${T.border}` }}>
+            <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:6 }}>Attendance Scheme</p>
+            <p style={{ fontSize:13, fontWeight:600, color:T.navy, lineHeight:1.35 }}>{day.scheme}</p>
+            <p style={{ fontSize:11, color:T.textSec, marginTop:6 }}>↳ {day.schedule}</p>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)" }}>
+            {[
+              { l:"First Sign-In", v:day.firstIn,  mono:true },
+              { l:"Last Sign-Out", v:day.lastOut,  mono:true },
+              { l:"Study Hours",   v:day.studyHrs, mono:true },
+              { l:"Late By",       v:day.lateBy,   mono:true },
+            ].map((m,i)=>(
+              <div key={i} style={{ padding:"11px 20px", borderBottom:`1px solid ${T.borderLight}`, borderRight:i%2===0?`1px solid ${T.borderLight}`:"none" }}>
+                <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>{m.l}</p>
+                <p style={{ fontSize:13, fontWeight:600, color:T.navy, marginTop:3, fontFamily:m.mono?"ui-monospace, SFMono-Regular, monospace":undefined }}>{m.v}</p>
+              </div>
+            ))}
+          </div>
+
+          {day.verification && (
+            <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 20px", background:T.kraftPale, borderBottom:`1px solid ${T.border}` }}>
+              <span style={{ color:T.kraft, flexShrink:0 }}>{I.shield}</span>
+              <p style={{ fontSize:12, color:T.navy, fontWeight:500, lineHeight:1.4 }}>{day.verification}</p>
+            </div>
+          )}
+
+          {day.note && (
+            <div style={{ padding:"10px 20px", borderBottom:`1px solid ${T.border}`, background:T.bg }}>
+              <p style={{ fontSize:11, color:T.textSec, lineHeight:1.5 }}>
+                <span style={{ color:T.navy, fontWeight:600 }}>Note · </span>{day.note}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {day.kind === "full" && (
+        <>
+          <SessionsTable sessions={day.sessions}/>
+          <SwipesTable swipes={day.swipes} totalHrs={day.studyHrs} onSwipeClick={onSwipeClick}/>
+        </>
+      )}
+
+      {day.kind === "summary" && (
+        <div style={{ padding:"14px 20px" }}>
+          <p style={{ fontSize:11, color:T.textMuted, textAlign:"center", padding:"10px 0", borderTop:`1px dashed ${T.border}`, borderBottom:`1px dashed ${T.border}`, lineHeight:1.5 }}>
+            Detailed session log and swipe trail archived for this day.<br/>Open <strong style={{ color:T.kraft }}>today's view (16 May)</strong> for the live breakdown.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── SessionsTable ──────────────────────────────────────────
+function SessionsTable({ sessions }) {
+  return (
+    <div style={{ padding:"14px 20px", borderBottom:`1px solid ${T.border}` }}>
+      <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Session Details</p>
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        {sessions.map(s => (
+          <div key={s.id} style={{ border:`1px solid ${T.border}`, borderRadius:T.radiusSm, overflow:"hidden", background:T.bg }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 12px", background:T.white, borderBottom:`1px solid ${T.border}` }}>
+              <div style={{ width:26, height:26, borderRadius:7, background:T.kraftLight, color:T.kraft, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, flexShrink:0 }}>{s.id}</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <p style={{ fontSize:12, fontWeight:600, color:T.navy, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{s.name}</p>
+                <p style={{ fontSize:10, color:T.textSec, marginTop:1, fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>{s.timing}</p>
+              </div>
+              <span style={{
+                fontSize:10, fontWeight:800, padding:"3px 7px", borderRadius:6,
+                background: s.status==="Present" ? STATUS.P.bg : s.status==="In Progress" ? STATUS.IP.bg : "#F0F2F6",
+                color:      s.status==="Present" ? STATUS.P.fg : s.status==="In Progress" ? STATUS.IP.fg : "#828FB0",
+                textTransform:"uppercase", letterSpacing:0.5, whiteSpace:"nowrap",
+              }}>{s.status}</span>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)" }}>
+              {[
+                { l:"Sign-In",  v:s.signIn,     mono:true },
+                { l:"Sign-Out", v:s.signOut,    mono:true },
+                { l:"Late In",  v:s.lateBy,     mono:true },
+                { l:"Verified", v:s.verifiedBy, mono:false },
+              ].map((c,i)=>(
+                <div key={i} style={{ padding:"8px 6px", borderRight:i<3?`1px solid ${T.border}`:"none", textAlign:"center" }}>
+                  <p style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.5 }}>{c.l}</p>
+                  <p style={{ fontSize:c.mono?12:11, fontWeight:600, color:T.navy, marginTop:3, fontFamily:c.mono?"ui-monospace, SFMono-Regular, monospace":undefined, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{c.v}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── SwipesTable ────────────────────────────────────────────
+function SwipesTable({ swipes, totalHrs, onSwipeClick }) {
+  return (
+    <div style={{ padding:"14px 20px" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+        <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1 }}>Swipes</p>
+        <span style={{ fontSize:11, color:T.textSec }}>
+          Total: <strong style={{ color:T.navy, fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>{totalHrs}</strong>
+        </span>
+      </div>
+      <div style={{ border:`1px solid ${T.border}`, borderRadius:T.radiusSm, overflow:"hidden" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"54px 96px 1fr 56px", padding:"8px 12px", background:T.bg, borderBottom:`1px solid ${T.border}`, fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>
+          <span>Type</span><span>Swipe Time</span><span>Location</span><span style={{ textAlign:"right" }}>Action</span>
+        </div>
+        {swipes.map((sw,i) => (
+          <div key={sw.id} style={{ display:"grid", gridTemplateColumns:"54px 96px 1fr 56px", padding:"10px 12px", borderTop:i>0?`1px solid ${T.borderLight}`:"none", alignItems:"center", fontSize:12 }}>
+            <span style={{
+              width:44, height:22, borderRadius:6, display:"inline-flex", alignItems:"center", justifyContent:"center",
+              fontSize:10, fontWeight:800,
+              background:sw.type==="IN"?STATUS.P.bg:T.blueLight, color:sw.type==="IN"?STATUS.P.fg:T.blue,
+            }}>{sw.type}</span>
+            <span>
+              <span style={{ fontSize:12, fontWeight:600, color:sw.time?T.navy:T.textMuted, fontFamily:"ui-monospace, SFMono-Regular, monospace", display:"block" }}>{sw.time || "—"}</span>
+              <span style={{ fontSize:10, color:T.textMuted, display:"block", marginTop:1 }}>16 May 2026</span>
+            </span>
+            <span style={{ fontSize:11, color:sw.status==="verified"?T.navyLight:T.textMuted, lineHeight:1.35 }}>
+              {sw.status==="verified" ? (
+                <>
+                  Inside geofence · <span style={{ fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>{sw.dist}</span>
+                  <br/>
+                  <span style={{ fontSize:10, color:T.textSec }}>Session {sw.session}</span>
+                </>
+              ) : (
+                <>Awaiting sign-out<br/><span style={{ fontSize:10, color:T.textMuted }}>Session {sw.session}</span></>
+              )}
+            </span>
+            <span style={{ textAlign:"right" }}>
+              <button onClick={()=>sw.status==="verified" && onSwipeClick(sw)} disabled={sw.status!=="verified"}
+                style={{
+                  background:"none", border:"none",
+                  color: sw.status==="verified" ? T.blue : T.textMuted,
+                  fontSize:11, fontWeight:600, padding:"3px 0",
+                  cursor: sw.status==="verified" ? "pointer" : "not-allowed",
+                  fontFamily:FONT,
+                }}>
+                {sw.status==="verified" ? "Info ›" : "—"}
+              </button>
+            </span>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize:11, color:T.textSec, marginTop:8, textAlign:"right" }}>
+        Actual Hours: <strong style={{ color:T.navy, fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>{totalHrs}</strong>
+      </p>
+    </div>
+  );
+}
+
+// ─── SwipeDetailsModal ──────────────────────────────────────
+function SwipeDetailsModal({ swipe, learner, onClose }) {
+  if (!swipe) return null;
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(27,37,89,0.5)", backdropFilter:"blur(2px)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn 0.2s ease" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:T.white, borderRadius:T.radius, maxWidth:560, width:"100%", boxShadow:"0 20px 60px rgba(27,37,89,0.3)", animation:"scaleIn 0.25s ease" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 24px", borderBottom:`1px solid ${T.border}` }}>
+          <div>
+            <h3 style={{ fontSize:17, fontWeight:700, color:T.navy }}>Swipe Details</h3>
+            <p style={{ fontSize:12, color:T.textSec, marginTop:2 }}>Geofence-verified sign-{swipe.type==="IN"?"in":"out"}</p>
+          </div>
+          <div onClick={onClose} style={{ width:32, height:32, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:T.textSec }}>{I.close}</div>
+        </div>
+        <div style={{ padding:"22px 24px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:"18px 24px" }}>
+          <InfoField label="Learner Name"   value={learner.name}/>
+          <InfoField label="Roll Number"    value={learner.rollNo}/>
+          <InfoField label="Swipe Date"     value="16 May 2026"/>
+          <InfoField label="Swipe Time"     value={`${swipe.time} IST`} mono/>
+          <InfoField label="Type"
+            value={
+              <span style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"3px 9px", borderRadius:6, fontSize:11, fontWeight:700, background:swipe.type==="IN"?STATUS.P.bg:T.blueLight, color:swipe.type==="IN"?STATUS.P.fg:T.blue }}>
+                {swipe.type==="IN"?"↘ Sign-In":"↗ Sign-Out"}
+              </span>
+            }/>
+          <InfoField label="Session"        value={`Session ${swipe.session}`}/>
+          <InfoField label="Latitude"       value={swipe.lat?.toFixed(5)} mono/>
+          <InfoField label="Longitude"      value={swipe.lng?.toFixed(5)} mono/>
+          <InfoField label="Geofence Check" span={2}
+            value={<span style={{ color:STATUS.P.fg, fontWeight:600 }}>✓ Inside · {swipe.dist} from center · Kraftshala Campus, Gurugram</span>}/>
+          <InfoField label="Google Maps" span={2}
+            value={<a href={`https://maps.google.com/?q=${swipe.lat},${swipe.lng}`} target="_blank" rel="noopener noreferrer" style={{ color:T.blue, textDecoration:"underline", fontSize:13 }}>Open in Google Maps ↗</a>}/>
+          <InfoField label="Device"         value="iPhone 14 · iOS 17.4"/>
+          <InfoField label="App Version"    value="KS-LMS 2.4.1"/>
+          <InfoField label="Network"        value="Campus-WiFi"/>
+          <InfoField label={swipe.type==="IN" ? "Instructor Verification" : "Sign-Out Validation"}
+            value={
+              swipe.type==="IN"
+                ? <span style={{ color:STATUS.P.fg, fontWeight:600 }}>✓ Visual check by {swipe.verifiedBy || "instructor"} after sign-in</span>
+                : <span style={{ color:T.textSec }}>Auto-recorded · geofence revalidated at exit (no instructor check needed for sign-out)</span>
+            }/>
+          <InfoField label="Location" span={2}
+            value="Building A, Kraftshala Campus, Sector 32, Gurugram, Haryana 122001, India"/>
+        </div>
+        <div style={{ padding:"14px 24px", borderTop:`1px solid ${T.border}`, display:"flex", justifyContent:"flex-end" }}>
+          <button onClick={onClose} style={{ padding:"10px 22px", borderRadius:T.radiusSm, border:"none", background:T.kraft, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>Got it</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── InsightsModal ──────────────────────────────────────────
+function InsightsModal({ open, learner, onClose }) {
+  if (!open) return null;
+  const segs = [
+    { s:"P",  count:7 },
+    { s:"IP", count:1 },
+    { s:"L",  count:1 },
+    { s:"R",  count:1 },
+    { s:"HD", count:1 },
+    { s:"A",  count:1 },
+    { s:"C",  count:1 },
+    { s:"H",  count:1 },
+  ];
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(27,37,89,0.5)", backdropFilter:"blur(2px)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn 0.2s ease" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:T.white, borderRadius:T.radius, maxWidth:680, width:"100%", boxShadow:"0 20px 60px rgba(27,37,89,0.3)", animation:"scaleIn 0.25s ease" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 24px", borderBottom:`1px solid ${T.border}` }}>
+          <div>
+            <h3 style={{ fontSize:17, fontWeight:700, color:T.navy }}>Insights · May 2026</h3>
+            <p style={{ fontSize:12, color:T.textSec, marginTop:2 }}>{learner.name} · {learner.batch}</p>
+          </div>
+          <div onClick={onClose} style={{ width:32, height:32, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:T.textSec }}>{I.close}</div>
+        </div>
+        <div style={{ padding:"22px 24px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
+            {[
+              { l:"Class Days",          v:"12",       sub:"this month so far (1 cancelled, excluded)" },
+              { l:"Attendance %",        v:"92%",      sub:"11 of 12 attended · above 80% threshold", accent:STATUS.P.fg },
+              { l:"Late Days",           v:"1",        sub:"5 May · 18 min late",                     accent:"#B66F00" },
+              { l:"Absent Days",         v:"1",        sub:"11 May · geofence not confirmed",         accent:STATUS.A.fg },
+              { l:"Avg First Sign-In",   v:"08:58 AM", sub:"vs 09:00 scheduled" },
+              { l:"Avg Last Sign-Out",   v:"12:57 PM", sub:"vs 13:00 scheduled" },
+            ].map((m,i)=>(
+              <div key={i} style={{ padding:"14px 16px", background:T.bg, borderRadius:T.radiusSm, border:`1px solid ${T.border}` }}>
+                <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.8 }}>{m.l}</p>
+                <p style={{ fontSize:22, fontWeight:800, color:m.accent||T.navy, marginTop:4, lineHeight:1.1 }}>{m.v}</p>
+                <p style={{ fontSize:11, color:T.textSec, marginTop:3 }}>{m.sub}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:10 }}>Status Distribution</p>
+          <div style={{ display:"flex", height:30, borderRadius:T.radiusSm, overflow:"hidden", marginBottom:14, border:`1px solid ${T.border}` }}>
+            {segs.map((seg,i)=>(
+              <div key={i} title={`${STATUS[seg.s].label}: ${seg.count} day${seg.count>1?"s":""}`}
+                style={{ flex:seg.count, background:STATUS[seg.s].fg, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:10, fontWeight:800 }}>
+                {seg.count>=2?seg.count:""}
+              </div>
+            ))}
+          </div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:"8px 14px" }}>
+            {segs.map(seg=>(
+              <span key={seg.s} style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:11, color:T.textSec }}>
+                <span style={{ width:10, height:10, borderRadius:3, background:STATUS[seg.s].fg }}/>{STATUS[seg.s].label}: <strong style={{ color:T.navy }}>{seg.count}</strong>
+              </span>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding:"14px 24px", borderTop:`1px solid ${T.border}`, display:"flex", justifyContent:"flex-end" }}>
+          <button onClick={onClose} style={{ padding:"10px 22px", borderRadius:T.radiusSm, border:"none", background:T.kraft, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── TableView ──────────────────────────────────────────────
+function TableView({ data, onSelectDay }) {
+  const rows = data.filter(r=>r.s!=="W");
+  const cols = "78px 1fr 78px 78px 76px 110px 64px 1fr";
+  return (
+    <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, overflow:"hidden", marginBottom:16 }}>
+      <div style={{ display:"grid", gridTemplateColumns:cols, background:T.bg, padding:"11px 16px", fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1 }}>
+        <span>Date</span><span>Scheme</span><span>First In</span><span>Last Out</span><span>Hrs</span><span>Status</span><span>Detail</span><span>Exception</span>
+      </div>
+      {rows.map((r,i)=>{
+        const cfg  = STATUS[r.s];
+        const info = DAYS[r.d];
+        const mono = { fontFamily:"ui-monospace, SFMono-Regular, monospace", fontSize:12 };
+        const isClass = r.s!=="H" && r.s!=="C";
+        const firstIn  = info?.firstIn  || "—";
+        const lastOut  = info?.lastOut  || "—";
+        const studyHrs = info?.studyHrs?.split(" (")[0] || "—";
+        return (
+          <div key={i} style={{ display:"grid", gridTemplateColumns:cols, padding:"11px 16px", borderTop:`1px solid ${T.borderLight}`, fontSize:13, alignItems:"center" }}>
+            <span style={{ color:T.navy, fontWeight:600 }}>{String(r.d).padStart(2,"0")} May</span>
+            <span style={{ color:T.navyLight, fontSize:12 }}>{isClass ? "PGP AILM — Weekday" : "—"}</span>
+            <span style={{ color:T.textSec, ...mono, fontSize:11 }}>{firstIn.replace(" AM","").replace(" PM","")}</span>
+            <span style={{ color:T.textSec, ...mono, fontSize:11 }}>{lastOut.replace(" AM","").replace(" PM","")}</span>
+            <span style={{ color:T.navy, fontWeight:600, fontSize:12 }}>{studyHrs}</span>
+            <span><StatusChip code={r.s}/></span>
+            <span>
+              <button onClick={()=>onSelectDay(r.d)}
+                style={{ background:"none", border:"none", color:T.blue, fontSize:12, fontWeight:600, cursor:"pointer", padding:0, fontFamily:FONT }}>
+                View ›
+              </button>
+            </span>
+            <span style={{ color:r.note?cfg.fg:T.textMuted, fontSize:12 }}>{r.note || "No attention required"}</span>
+          </div>
+        );
+      })}
+      <div style={{ display:"grid", gridTemplateColumns:cols, padding:"13px 16px", borderTop:`1.5px solid ${T.border}`, background:T.bg, fontSize:12, fontWeight:700 }}>
+        <span style={{ color:T.navy }}>TOTAL</span>
+        <span/><span/><span/>
+        <span style={{ color:T.navy, fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>39h 12m</span>
+        <span/><span/><span style={{ color:T.textMuted, fontWeight:500 }}>11 of 12 class days attended (cancelled excluded)</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── AttendanceLegend ───────────────────────────────────────
+function AttendanceLegend() {
+  return (
+    <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, padding:"14px 20px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
+        <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1 }}>Legend</p>
+        <span style={{ fontSize:11, color:T.textMuted }}>· status codes shown on each calendar day</span>
+      </div>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:14 }}>
+        {["P","A","L","HD","R","H","W","C"].map(k=>(
+          <span key={k} style={{ display:"inline-flex", alignItems:"center", gap:8 }}>
+            <span style={{
+              width:24, height:24, borderRadius:6,
+              background:STATUS[k].bg, border:`1px solid ${STATUS[k].border}`, color:STATUS[k].fg,
+              display:"inline-flex", alignItems:"center", justifyContent:"center",
+              fontSize:11, fontWeight:800,
+              ...(STATUS[k].stripe ? { backgroundImage:"repeating-linear-gradient(45deg,rgba(130,143,176,0.18),rgba(130,143,176,0.18) 4px,transparent 4px,transparent 10px)" } : {}),
+            }}>{STATUS[k].code}</span>
+            <span style={{ fontSize:12, fontWeight:600, color:T.navyLight }}>{STATUS[k].label}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BATCH ATTENDANCE PAGE  (mirrors admin's Attendance Info)
+// ═══════════════════════════════════════════════════════════════
+function BatchPage() {
+  const [activeLearner, setActiveLearner] = useState(DEFAULT_LEARNER);
+  const [selected, setSelected]           = useState(16);
+  const [view, setView]                   = useState("calendar"); // calendar | table
+  const [swipeOpen, setSwipeOpen]         = useState(null);
+  const [insightsOpen, setInsightsOpen]   = useState(false);
+  const [search, setSearch]               = useState("");
+  const [dropOpen, setDropOpen]           = useState(false);
+  const TODAY = 16;
+  const selectedDay = DAYS[selected] || null;
+
+  const pickLearner = (l) => {
+    setActiveLearner({
+      name:l.name, rollNo:l.rollNo, avatar:l.avatar,
+      batch:"PGP AI-Led Marketing · Batch 1",
+      attendancePct:l.attendancePct, present:Math.round(l.attendancePct/100 * 12), total:12,
+      avgStudyHrs:l.attendancePct >= 90 ? "3h 50m" : l.attendancePct >= 80 ? "3h 35m" : "2h 58m",
+      belowThreshold: l.attendancePct < 80 ? 1 : 0,
+    });
+    setSearch("");
+    setDropOpen(false);
+  };
+
+  return (
+    <div style={{ animation:"fadeIn 0.35s ease" }}>
+      {/* Filter bar */}
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18, gap:12, flexWrap:"wrap" }}>
+        <div>
+          <h2 style={{ fontSize:22, fontWeight:700, color:T.navy }}>Batch Attendance</h2>
+          <p style={{ fontSize:14, color:T.textSec, marginTop:4 }}>
+            PGP AI-Led Marketing · Batch 1 · 24 learners · pick any to view full attendance details
+          </p>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+          <FilterChip icon={I.users}    label="Batch · PGP AILM B1"  onClick={()=>{}}/>
+          <FilterChip icon={I.cal}      label="May 2026"             onClick={()=>{}}/>
+          <div style={{ display:"flex", border:`1px solid ${T.border}`, borderRadius:8, padding:3, background:T.bg }}>
+            <button onClick={()=>setView("calendar")} style={toggleBtn(view==="calendar")}>Calendar</button>
+            <button onClick={()=>setView("table")}    style={toggleBtn(view==="table")}>Table</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Learner header card */}
+      <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, padding:"18px 22px", marginBottom:14 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+          <div style={{ width:54, height:54, borderRadius:14, background:`linear-gradient(135deg,${T.kraft},#FF6B4A)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontWeight:800, color:"#fff", flexShrink:0 }}>{activeLearner.avatar}</div>
+          <div style={{ minWidth:200 }}>
+            <h3 style={{ fontSize:17, fontWeight:700, color:T.navy }}>{activeLearner.name}</h3>
+            <p style={{ fontSize:12, color:T.textSec, marginTop:2 }}>{activeLearner.rollNo} · {activeLearner.batch}</p>
+          </div>
+          <div style={{ flex:1, minWidth:240, position:"relative" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, background:T.bg, borderRadius:30, padding:"8px 18px", border:`1px solid ${T.border}` }}>
+              <span style={{ color:T.textMuted }}>{I.search}</span>
+              <input
+                placeholder="Switch learner — search across the batch..."
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+                onFocus={()=>setDropOpen(true)}
+                onBlur={()=>setTimeout(()=>setDropOpen(false),180)}
+                style={{ border:"none", outline:"none", background:"transparent", fontSize:13, color:T.text, width:"100%", fontFamily:FONT }}/>
+            </div>
+            {dropOpen && (
+              <div style={{ position:"absolute", top:"calc(100% + 6px)", left:0, right:0, background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radiusSm, boxShadow:T.shadowHover, zIndex:20, maxHeight:340, overflowY:"auto" }}>
+                {BATCH_LEARNERS
+                  .filter(l => !search || l.name.toLowerCase().includes(search.toLowerCase()) || l.rollNo.toLowerCase().includes(search.toLowerCase()))
+                  .map(l=>(
+                    <div key={l.rollNo} onClick={()=>pickLearner(l)}
+                      style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", cursor:"pointer", borderBottom:`1px solid ${T.borderLight}`, transition:"background 0.15s" }}
+                      onMouseEnter={e=>e.currentTarget.style.background=T.borderLight}
+                      onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                      <div style={{ width:32, height:32, borderRadius:8, background:T.borderLight, color:T.navyLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700 }}>{l.avatar}</div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <p style={{ fontSize:13, fontWeight:600, color:T.navy }}>{l.name}</p>
+                        <p style={{ fontSize:11, color:T.textSec }}>{l.rollNo}</p>
+                      </div>
+                      <span style={{ fontSize:12, fontWeight:700, color:l.attendancePct>=80?STATUS.P.fg:STATUS.A.fg }}>{l.attendancePct}%</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* KPI strip */}
+      <div style={{ display:"flex", gap:12, marginBottom:14, flexWrap:"wrap" }}>
+        <KPI label="Attendance %"    value={activeLearner.attendancePct+"%"}                  sub="vs 80% placement threshold"            accent={STATUS.P.fg}/>
+        <KPI label="Days Present"    value={`${activeLearner.present}/${activeLearner.total}`} sub="this month · cancelled excluded"/>
+        <KPI label="Avg Study Hrs"   value={activeLearner.avgStudyHrs}                         sub="per class day"/>
+        <KPI label="Below Threshold" value={activeLearner.belowThreshold}                      sub="weeks under 75%"/>
+        <KPI label="+3 Insights"     value="View"                                              sub="Click to expand →" accent={T.kraft} onClick={()=>setInsightsOpen(true)} highlight/>
+      </div>
+
+      {/* Main area: calendar + day detail OR table */}
+      {view==="calendar" ? (
+        <div style={{ display:"grid", gridTemplateColumns:"1.35fr 1fr", gap:14, marginBottom:14 }}>
+          <CalendarGrid data={LEARNER_MAY_2026} selected={selected} onSelect={setSelected} today={TODAY}/>
+          <DayDetailPanel day={selectedDay} onSwipeClick={setSwipeOpen}/>
+        </div>
+      ) : (
+        <TableView data={LEARNER_MAY_2026} onSelectDay={(d)=>{ setSelected(d); setView("calendar"); }}/>
+      )}
+
+      <AttendanceLegend/>
+
+      <SwipeDetailsModal swipe={swipeOpen} learner={activeLearner} onClose={()=>setSwipeOpen(null)}/>
+      <InsightsModal     open={insightsOpen} learner={activeLearner} onClose={()=>setInsightsOpen(false)}/>
     </div>
   );
 }
