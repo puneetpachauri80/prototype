@@ -190,3 +190,14 @@ Try clicking each calendar day type — every status now resolves to a meaningfu
 npm install
 npm run dev    # http://localhost:5173
 ```
+
+## Deploy
+
+- **Repo:** <https://github.com/puneetpachauri80/prototype>
+- **Live:** <https://prototype-gamma-rouge.vercel.app/>
+- **Host:** Vercel (auto-deploy on push to `main`)
+- **Build:** `npm run build` → `dist/` (auto-detected by Vercel's Vite preset)
+
+To rename the URL slug, go to Vercel → Project → Settings → General →
+Project Name. A name change updates the public URL (the old random one
+keeps redirecting for a while, but new traffic should use the new slug).
