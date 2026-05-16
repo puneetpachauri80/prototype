@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import LearnerApp from "./Learner.jsx";
+import InstructorApp from "./Instructor.jsx";
 
 // ─── ICONS ───────────────────────────────────────────────────
 const I = {
@@ -2196,12 +2197,13 @@ function PersonaSwitcher({ persona, setPersona }) {
       display:"flex", gap:0, fontFamily:FONT,
     }}>
       {[
-        { id:"admin",   label:"🖥  Admin"   },
-        { id:"learner", label:"📱  Learner" },
+        { id:"admin",      label:"🖥  Admin"      },
+        { id:"instructor", label:"👨‍🏫  Instructor" },
+        { id:"learner",    label:"📱  Learner"    },
       ].map(p => (
         <button key={p.id} onClick={()=>setPersona(p.id)}
           style={{
-            padding:"8px 16px", borderRadius:26, border:"none",
+            padding:"8px 14px", borderRadius:26, border:"none",
             background:persona===p.id ? T.kraft : "transparent",
             color:persona===p.id ? "#fff" : T.navyLight,
             fontSize:12, fontWeight:700, cursor:"pointer",
@@ -2215,32 +2217,38 @@ function PersonaSwitcher({ persona, setPersona }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TOP-LEVEL APP — picks Admin vs Learner; hash routes (#learner)
+// TOP-LEVEL APP — picks Admin / Instructor / Learner; hash routes
 // ═══════════════════════════════════════════════════════════════
-export default function App() {
-  const [persona, setPersona] = useState(() =>
-    typeof window !== "undefined" && window.location.hash === "#learner" ? "learner" : "admin"
-  );
+function personaFromHash() {
+  if (typeof window === "undefined") return "admin";
+  if (window.location.hash === "#learner")    return "learner";
+  if (window.location.hash === "#instructor") return "instructor";
+  return "admin";
+}
 
-  // Keep URL hash in sync so links like ?…#learner go straight to learner view
+export default function App() {
+  const [persona, setPersona] = useState(personaFromHash);
+
+  // Keep URL hash in sync so direct links work
   useEffect(() => {
-    if (persona === "learner" && window.location.hash !== "#learner") {
-      window.history.replaceState(null, "", "#learner");
-    } else if (persona === "admin" && window.location.hash === "#learner") {
-      window.history.replaceState(null, "", window.location.pathname);
+    const expected = persona === "admin" ? "" : `#${persona}`;
+    if ((window.location.hash || "") !== expected) {
+      window.history.replaceState(null, "", expected || window.location.pathname);
     }
   }, [persona]);
 
-  // React to back/forward navigation
+  // React to back/forward / external hash changes
   useEffect(() => {
-    const onHash = () => setPersona(window.location.hash === "#learner" ? "learner" : "admin");
+    const onHash = () => setPersona(personaFromHash());
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
   return (
     <>
-      {persona === "learner" ? <LearnerApp/> : <AdminApp/>}
+      {persona === "learner"    && <LearnerApp/>}
+      {persona === "instructor" && <InstructorApp/>}
+      {persona === "admin"      && <AdminApp/>}
       <PersonaSwitcher persona={persona} setPersona={setPersona}/>
     </>
   );

@@ -320,6 +320,66 @@ audit trail stays intact.
 
 ---
 
+## Feedback applied (round 8 — 16 May 2026) — Instructor LMS
+
+Third persona shipped as a self-contained desktop app in `src/Instructor.jsx`.
+Hash route `#instructor`. Persona switcher now 3-way (`🖥 Admin · 👨‍🏫 Instructor · 📱 Learner`).
+
+### Persona: Priya Kothari
+Instructor for PGP AI-Led Marketing · Batch 1. Subject: Brand & Performance
+Marketing. The same Priya who appears throughout admin/learner as the
+verifying instructor — keeping the cast consistent.
+
+### Pages (5)
+
+1. **Home** — Greeting hero, today's sessions (S1 ✅ Completed with 27/24 row; S2 LIVE with a "Take Attendance · 14 pending" CTA), This-week stats (batch attendance, at-risk count, sessions taken, on-time rate), Quick links grid.
+
+2. **Take Attendance** ⭐ (the new flagship — `ApprovalPage`) — the core of
+   the PRD's instructor flow:
+   - Session header with live "SESSION IN PROGRESS · 12 MIN" badge + pulsing dot.
+   - **5 clickable summary cards** (Self-Reported 14 · Verified 4 · Not Yet 3 · Rejected 1 · Manual 2) — clicking any card filters the list to that status.
+   - Bulk CTA `Verify All Self-Reported` flips all 14 yellow rows to green in one tap.
+   - Filter chips + search by name/roll-no.
+   - **24-row learner table** with action buttons per status:
+     - `self-reported` → **Verify** (green) / **Reject** (rose)
+     - `not-yet` → **Mark Present** (manual, primary)
+     - `verified` / `rejected` → **Revert** (back to self-reported)
+     - `manual` → **Revert** (back to not-yet)
+   - Late-minutes auto-calculated relative to session start (11:30).
+   - **At-risk badge** appears inline for learners under 80% (Arjun Kapoor at 69%).
+   - Bottom **Finalize Attendance** bar with a confirmation modal that breaks down what will be saved (Verified, Self-Reported = unverified, Not Yet = absent, Rejected = absent).
+
+3. **Batch Attendance** (`BatchPage`) — Filter chips (All / Top performers ≥95% / At risk <80%) + search + sort (pct desc/asc, name). 24-learner table with avatar, name + flags (AT-RISK pill / TOP pill), big attendance % with progress bar, **6-cell weekly heatmap** showing each learner's last 6 class days color-coded by status, days-present count, View action.
+
+4. **My Attendance** (`MyAttendancePage`) — Priya's own record. Identity card + 4 KPIs (98% attendance, 13/13 days, 08:34 avg sign-in, 96% on-time rate) + a compact May 2026 calendar (every class day Present + today's `IP`) + day-detail card showing today's arrival, status, sessions taught + a note explaining instructor attendance is logged at campus check-in.
+
+5. **Regularization** (`RegPage`) — Three tabs:
+   - **To Review** — 2 pending requests from her batch (Vikram Joshi forgot to check in; Rahul Iyer late due to metro). Same approval ladder & data-integrity story as admin's.
+   - **Closed** — historical decisions.
+   - **My Requests** — Priya's own filed requests (empty by default; the `File my own request` button opens a small form that routes directly to L2 = Program Coordinator since L1 doesn't apply to an instructor's own filing).
+
+### Architecture
+- `App.jsx` exports a 3-way picker:
+  - `personaFromHash()` reads `#learner` / `#instructor` / default → admin.
+  - `useEffect` writes the hash back as you toggle so direct links work.
+  - `<PersonaSwitcher>` floating pill expanded to 3 options.
+- `Instructor.jsx` is fully self-contained (own `T`, `I`, `Styles`, mock data) — same convention as `Learner.jsx`.
+- State for Approval lives at the `InstructorApp` level so the home page's
+  "Take Attendance · X pending" CTA mirrors the live counts.
+
+### Mock data (Instructor side)
+- 24 learners with realistic Indian names + attendance % spread (69% to 99%, one at-risk learner Arjun Kapoor).
+- Session 2 attendance has 14 self-reported, 4 verified, 3 not-yet, 1 rejected, 2 manual — mix designed so reviewers can try every action immediately.
+- L1 review queue duplicates admin's pending entries (Vikram Joshi, Rahul Iyer) — same data because L1 is **who reviews first**; admin's view as L2 sees these too.
+
+### Things still gimmicks (intentional)
+- Top navbar's search input (instructor & global).
+- Export CSV / Trends buttons on Batch Attendance.
+- Notification bell badge.
+- The "View" button on each batch learner row (could route to learner-specific attendance info; left as gimmick for now).
+
+---
+
 ## Conventions for future edits
 
 - **Don't add real persistence yet.** Forms reset on cancel/save; no localStorage,

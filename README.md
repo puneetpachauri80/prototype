@@ -17,10 +17,10 @@
 Deployed via Vercel · auto-builds from `main`. No login required — reviewers
 can click straight through.
 
-### Two views in one site
-Bottom-right of every page is a floating **🖥 Admin · 📱 Learner** pill — flip
-between the Program Coordinator desktop console and the Learner mobile LMS.
-URL hashes work too: `…/` for Admin, `…/#learner` for the mobile view.
+### Three views in one site
+Bottom-right of every page is a floating **🖥 Admin · 👨‍🏫 Instructor · 📱 Learner**
+pill — flip between all three personas. URL hashes work too: `…/` for Admin,
+`…/#instructor` for the instructor LMS, `…/#learner` for the mobile learner LMS.
 
 ### Try this flow (Admin)
 1. Click the **☰** hamburger (top-left of the navbar) → hover **Attendance** →
@@ -65,6 +65,27 @@ URL hashes work too: `…/` for Admin, `…/#learner` for the mobile view.
    3-step approval ladder (Learner → Instructor L1 → Coordinator L2). Hit
    **Approve** or **Reject** → ConfirmModal asks for a note (required for
    reject) → the request moves from Active to Closed with your note attached.
+
+### Try this flow (Instructor — desktop LMS)
+1. Flip the persona pill to **👨‍🏫 Instructor** (or open `…/#instructor`).
+   You land on **Take Attendance** for Session 2 (live).
+2. The 5 summary cards at top are clickable filters. Click **Self-Reported**
+   to see the 14 learners waiting for you to verify.
+3. Hit **Verify All Self-Reported** — all 14 flip green in one tap. Or verify
+   individually with the per-row **Verify ✓** / **Reject ✗** buttons.
+4. Toggle filter to **Not Yet** (3 rows) — click **Mark Present** on any row
+   to manually mark them (e.g., phone-dead case from the PRD).
+5. Click **Finalize Attendance** at the bottom → confirmation modal breaks
+   down exactly what will be saved (Verified, Self-Reported = unverified
+   present, Not Yet = absent, Rejected = absent).
+6. ☰ menu → **Batch Attendance** — table of all 24 learners with attendance
+   %, a 6-cell weekly heatmap per learner, and at-risk pills for anyone
+   below 80% (Arjun Kapoor at 69%).
+7. ☰ menu → **Regularization** — same 2 pending requests as the admin sees
+   (because instructor is L1 reviewer); approve/reject works identically.
+8. Click **File my own request** to file an instructor's own regularization
+   — routes directly to L2 (Program Coordinator) since L1 doesn't apply to
+   the instructor's own filing.
 
 ---
 
