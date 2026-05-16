@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import LearnerApp from "./Learner.jsx";
 
 // ─── ICONS ───────────────────────────────────────────────────
 const I = {
@@ -1656,9 +1657,9 @@ function SidePanel({ open, onClose, onSelect }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// APP
+// ADMIN APP (Program Coordinator console)
 // ═══════════════════════════════════════════════════════════════
-export default function App() {
+function AdminApp() {
   const [view, setView] = useState("home");
   const [attPage, setAttPage] = useState("scheme");
   const [sideOpen, setSideOpen] = useState(false);
@@ -1733,5 +1734,67 @@ export default function App() {
         {view==="attendanceInfo" && <AttendanceInfoPage/>}
       </div>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PERSONA SWITCHER (floating pill, bottom-right)
+// ═══════════════════════════════════════════════════════════════
+function PersonaSwitcher({ persona, setPersona }) {
+  return (
+    <div style={{
+      position:"fixed", bottom:18, right:18, zIndex:500,
+      background:T.white, border:`1px solid ${T.border}`,
+      borderRadius:30, padding:4, boxShadow:"0 10px 32px rgba(27,37,89,0.18)",
+      display:"flex", gap:0, fontFamily:FONT,
+    }}>
+      {[
+        { id:"admin",   label:"🖥  Admin"   },
+        { id:"learner", label:"📱  Learner" },
+      ].map(p => (
+        <button key={p.id} onClick={()=>setPersona(p.id)}
+          style={{
+            padding:"8px 16px", borderRadius:26, border:"none",
+            background:persona===p.id ? T.kraft : "transparent",
+            color:persona===p.id ? "#fff" : T.navyLight,
+            fontSize:12, fontWeight:700, cursor:"pointer",
+            fontFamily:FONT, transition:"all 0.18s",
+          }}>
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOP-LEVEL APP — picks Admin vs Learner; hash routes (#learner)
+// ═══════════════════════════════════════════════════════════════
+export default function App() {
+  const [persona, setPersona] = useState(() =>
+    typeof window !== "undefined" && window.location.hash === "#learner" ? "learner" : "admin"
+  );
+
+  // Keep URL hash in sync so links like ?…#learner go straight to learner view
+  useEffect(() => {
+    if (persona === "learner" && window.location.hash !== "#learner") {
+      window.history.replaceState(null, "", "#learner");
+    } else if (persona === "admin" && window.location.hash === "#learner") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [persona]);
+
+  // React to back/forward navigation
+  useEffect(() => {
+    const onHash = () => setPersona(window.location.hash === "#learner" ? "learner" : "admin");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  return (
+    <>
+      {persona === "learner" ? <LearnerApp/> : <AdminApp/>}
+      <PersonaSwitcher persona={persona} setPersona={setPersona}/>
+    </>
   );
 }

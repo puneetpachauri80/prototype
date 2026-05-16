@@ -17,7 +17,12 @@
 Deployed via Vercel · auto-builds from `main`. No login required — reviewers
 can click straight through.
 
-### Try this flow
+### Two views in one site
+Bottom-right of every page is a floating **🖥 Admin · 📱 Learner** pill — flip
+between the Program Coordinator desktop console and the Learner mobile LMS.
+URL hashes work too: `…/` for Admin, `…/#learner` for the mobile view.
+
+### Try this flow (Admin)
 1. Click the **☰** hamburger (top-left of the navbar) → hover **Attendance** →
    click **Attendance Info** (orange "OPEN" badge).
 2. On the calendar, click different status types to see how the right-side
@@ -29,6 +34,20 @@ can click straight through.
 4. Toggle to **Table** view and use **View ›** to jump to any day.
 5. Click **+3 Insights · View** on the KPI strip → distribution bar across
    all statuses.
+
+### Try this flow (Learner — mobile)
+1. Hit the **📱 Learner** pill (or open `…/#learner`). On desktop the LMS
+   renders inside an iPhone-style phone frame so you see the real mobile
+   layout; on a phone it's full-screen.
+2. From the Home screen, tap **Sign In** on *Session 2 — AI in Performance
+   Marketing*.
+3. On the Sign-In screen, hit the **"Toggle to Outside"** demo button at the
+   top to see the geofence error state (red banner + disabled Confirm). Toggle
+   back to Inside → tap **Confirm Sign-In** → success screen.
+4. Back on Home, tap **Sign Out** on Session 2 → same flow with elapsed time.
+5. Tap the **☰** menu → hover **Attendance** → tap **My Attendance** to see
+   the mobile-adapted calendar/swipes view (same data as Admin's
+   Attendance Info, adapted for a 390px screen).
 
 ---
 

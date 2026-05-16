@@ -171,6 +171,81 @@ Try clicking each calendar day type — every status now resolves to a meaningfu
 
 ---
 
+## Feedback applied (round 6 — 16 May 2026) — Learner mobile app
+
+New file: `src/Learner.jsx` — completely self-contained learner-side mobile
+experience. Lives alongside `src/App.jsx` (the admin console). The two are
+intentionally **not** coupled: each has its own theme/icon/data setup so they
+can evolve independently. A new top-level `App` in `src/App.jsx` picks which
+one to render based on the `persona` state + URL hash (`#learner`).
+
+### Files & navigation
+- **`src/Learner.jsx`** — single-file mobile app with phone-frame wrapper
+- **`src/App.jsx`** — now exports a top-level `App` that:
+  - Maintains `persona: "admin" | "learner"` state
+  - Reads/writes URL hash (`#learner` deep-links to the learner view)
+  - Listens to `hashchange` (back/forward survives)
+  - Renders `<AdminApp/>` (was the old `App`) or `<LearnerApp/>`
+  - Always overlays a `PersonaSwitcher` (floating pill bottom-right, `🖥 Admin · 📱 Learner`)
+
+### Phone frame
+- `PhoneFrame` component wraps content. On desktop (≥ 540px viewport) it
+  renders an iPhone-style bezel: 414×830px shell with dark frame, dynamic
+  island at top, status bar (mock 11:25 time + signal/wifi/battery icons),
+  rounded screen, home indicator pill at bottom. On mobile it disappears so
+  the LMS goes full-screen.
+
+### Screens (state machine on `LearnerApp.screen`)
+- **`home`** — Greeting hero + **Today's Class card** with two `SessionRow`s
+  (Session 1 already complete, Session 2 ready for Sign-In). Plus 2×2 KPI
+  grid, Quick Links (My Attendance live, others gimmicks), Announcements feed.
+- **`signin`** — Sign-In screen with `MiniMap` (geofence ring with pulsing
+  center pin), green/red status banner, Session card, sign-in details table
+  (date / live time / lat / lng / "session starts in 5 min"), optional
+  Remarks textarea, sticky bottom Confirm button. **Demo toggle** at top
+  ("Simulate Outside") lets reviewers see the outside-geofence error state
+  with the disabled CTA + amber instructor-help banner.
+- **`signout`** — Same component (`SignInScreen` with `mode="out"`), shows
+  elapsed time instead of "starts in", dark Confirm Sign-Out button.
+- **`success-in` / `success-out`** — Big green check, time/location/session
+  card, optional "Awaiting instructor verification" tip.
+- **`attendance` (My Attendance)** — Mobile-adapted version of admin's
+  Attendance Info: identity strip (orange gradient), 2×2 KPI grid,
+  `MobileCalendar` (compact 7-col grid, single-letter weekday headers, square
+  cells with date + status code), `MobileDayDetail` (date + status, 2×2
+  metric grid, verification banner, sessions cards with 4-col mini-metric
+  grid, swipes table with type badge / 2-line time / location / Info link),
+  legend strip. Tap any swipe's "Info" → `MobileSwipeModal` (bottom-sheet
+  style with handle bar, all the geofence/device/verification fields).
+
+### Side drawer
+- `MobileDrawer` slides in from left, backdrop blur. Orange gradient header
+  with learner avatar + roll number + batch. **Attendance** item expands on
+  hover/click to reveal: My Attendance *(live, "OPEN" badge)*, My Swipes
+  (gimmick), Regularization (gimmick). Other items: Home / Schedule /
+  Resources / Profile (all gimmicks).
+
+### Mock state
+- Initial: Session 1 = `completed`, Session 2 = `signed-in` (in progress)
+- Tapping Sign-In on Session 2 (after toggling back to `pending`) → walk the
+  flow → success → state becomes `signed-in` → home shows Sign-Out option
+- All other learner data (calendar, swipes, KPIs) mirrors the admin's view of
+  Aarav Sharma's record for visual consistency
+
+### Vocabulary translation maintained
+- "Employee" → **Learner**; "Shift" → **Session Schedule**; "Swipe" →
+  **Sign-In / Sign-Out**; "Penalty" → **Below threshold**; OUT swipes are
+  geofence-validated only (no instructor check — same nuance as admin).
+
+### Navigation flows
+1. **Sign-In demo:** Home → Sign In on Session 2 → demo toggle to "Outside"
+   to see error state → toggle back to "Inside" → Confirm → success → Home.
+2. **Sign-Out demo:** Home → Sign Out on Session 2 → Confirm → success → Home.
+3. **My Attendance:** Home → tap My Attendance OR ☰ menu → Attendance →
+   My Attendance.
+
+---
+
 ## Conventions for future edits
 
 - **Don't add real persistence yet.** Forms reset on cancel/save; no localStorage,
