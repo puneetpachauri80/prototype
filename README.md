@@ -12,7 +12,23 @@
 
 ## Live demo
 
-🔗 _Add your Vercel URL here once deployed._
+🔗 **<https://prototype-gamma-rouge.vercel.app/>**
+
+Deployed via Vercel · auto-builds from `main`. No login required — reviewers
+can click straight through.
+
+### Try this flow
+1. Click the **☰** hamburger (top-left of the navbar) → hover **Attendance** →
+   click **Attendance Info** (orange "OPEN" badge).
+2. On the calendar, click different status types to see how the right-side
+   panel adapts: **1 May** (🎉 Holiday) · **11 May** (⚠️ Absent + Raise
+   Regularization CTA) · **14 May** (🚫 Cancelled) · **15 May** (Half-Day) ·
+   **12 May** (Regularized) · **16 May** (today's live view).
+3. On 16 May's Swipes table, click **Info ›** on an IN swipe vs an OUT swipe
+   to see the modal differ (instructor visual check vs. geofence auto-revalidation).
+4. Toggle to **Table** view and use **View ›** to jump to any day.
+5. Click **+3 Insights · View** on the KPI strip → distribution bar across
+   all statuses.
 
 ---
 
