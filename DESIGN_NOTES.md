@@ -246,6 +246,80 @@ one to render based on the `persona` state + URL hash (`#learner`).
 
 ---
 
+## Feedback applied (round 7 — 16 May 2026) — Regularization flow
+
+Built both ends of the regularization workflow per the PRD's approval ladder.
+
+### Learner (mobile) — `RegularizationScreen` + `ApplyForm`
+- New `RegularizationScreen` (in `src/Learner.jsx`) with three tabs:
+  - **Apply** — intro card explaining the flow + a list of `ELIGIBLE_DAYS`
+    (Aarav's Absent 11 May, Late 5 May, Half-Day 15 May). Tap → opens
+    `ApplyForm` bottom sheet.
+  - **Pending** — empty by default; new submissions land here with a yellow
+    "Pending Review" pill.
+  - **History** — Aarav's existing approved request (12 May).
+- `ApplyForm` (bottom sheet): day card at top, **Reason** dropdown with PRD's
+  4 reason types, **Sessions affected** segmented control (S1 / S2 / Both),
+  **Details** textarea with live char count (min 10 chars to enable Submit) and
+  500-char cap, **Supporting evidence** gimmick button, data-integrity notice,
+  Cancel / Submit actions.
+- `RequestCard` renders both pending and closed requests with status pill +
+  reviewer's note appended at the bottom for closed entries.
+- Two new entry points to the screen:
+  1. Side drawer → Attendance → **Regularization** (sub-item now `live:true`)
+  2. My Attendance → tap an Absent/Cancelled day's banner → **+ Raise
+     Regularization Request** (was a gimmick; now wired via `onRegularize`
+     prop threaded through `MyAttendanceScreen` → `MobileDayDetail` →
+     `LearnerApp`). Pre-selects the tapped day in the apply form.
+- After Submit, a green `Toast` appears at the top, the new request moves into
+  the Pending tab, and the tab switches to Pending automatically.
+
+### Admin (desktop) — `RegularizationsReviewPage` + modals
+- New page in `src/App.jsx`, reachable via the side drawer (☰ → Attendance →
+  **Regularization**, now `live:true`).
+- Layout matches the greytHR reference: title + subtitle, **Active | Closed**
+  tab pills with count badges, two gimmick filter chips on the right.
+- `ReviewRequestCard` shows learner identity + roll no + sessions, the day in
+  question with a `StatusChip`, applied-on date with a "23 hours ago"
+  relative-time hint, reason + details, optional evidence link. Pending cards
+  end with **View Details · Reject · Approve**; closed cards end with the
+  reviewer's note + signature.
+- **`DetailsModal`** (opened by View Details) — full request card with five
+  sections: Learner, Date in question, Request meta, **Approval Ladder**
+  visualization (3-step with done/active/idle states reflecting the PRD's
+  Learner → Instructor L1 → Coordinator L2 flow), and Decision (if closed) +
+  a data-integrity reminder banner.
+- **`ConfirmModal`** opens on Approve or Reject from either the card or the
+  details modal. Note is required (min 5 chars) for Reject; optional for
+  Approve. Submitting promotes the request from Active → Closed with the
+  reviewer + timestamp + note attached.
+- **`AdminToast`** (top-right) confirms the action.
+- Mock data: `REVIEW_QUEUE_INITIAL` has 2 active (Vikram Joshi · forgot to
+  check in; Rahul Iyer · late due to metro delay, with attached evidence) and
+  2 closed (Sneha Gupta approved; Karan Khanna rejected for missing the
+  48-hour window — example of L1 rejection that could escalate to L2).
+
+### Navigation map updated
+```
+Admin (☰ → Attendance):
+  ├── Attendance Info        [OPEN — live]
+  ├── Regularization         [OPEN — live ★ new]
+  ├── Learner Swipes         (gimmick)
+  └── Attendance Muster      (gimmick)
+
+Learner (☰ → Attendance):
+  ├── My Attendance          [OPEN — live]
+  ├── Regularization         [OPEN — live ★ new]
+  └── My Swipes              (gimmick)
+```
+
+### Data integrity in the UI
+Both modals reiterate the PRD rule: **original sign-in/out timestamps are
+never deleted**. Approval adds a verification overlay + instructor note. The
+audit trail stays intact.
+
+---
+
 ## Conventions for future edits
 
 - **Don't add real persistence yet.** Forms reset on cancel/save; no localStorage,

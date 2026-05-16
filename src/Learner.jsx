@@ -157,6 +157,38 @@ const DAYS = {
   },
 };
 
+// ─── REGULARIZATION DATA ─────────────────────────────────────
+// Reason types come from the PRD's regularization workflow.
+const REASON_TYPES = [
+  "I was present but forgot to check in",
+  "I checked in but wasn't verified by the instructor",
+  "I was late but had a valid reason",
+  "I had to leave early for a valid reason",
+];
+
+// Days from Aarav's record that are still eligible to file a regularization for.
+const ELIGIBLE_DAYS = [
+  { d:11, status:"A",  date:"11 May 2026", weekday:"Monday",  note:"No sign-in received. Counts as 1 absent day." },
+  { d:5,  status:"L",  date:"05 May 2026", weekday:"Tuesday", note:"Late sign-in at 09:18 (18 min after start)." },
+  { d:15, status:"HD", date:"15 May 2026", weekday:"Friday",  note:"Left at 10:32 — below 50% threshold = Half Day." },
+];
+
+// Learner's own past requests.
+const MY_REGS_INITIAL = [
+  {
+    id:"REG-2026-0006",
+    forDate:"12 May 2026", forDateLabel:"Tuesday, 12 May",
+    appliedOn:"12 May 2026, 14:30",
+    reasonType:"I was present but forgot to check in",
+    details:"Phone GPS was acting up at 09:00 — couldn't confirm location. Was in class throughout S1 and S2. Priya can confirm.",
+    sessions:"Both sessions",
+    status:"approved",
+    reviewer:"Priya Kothari (Instructor · L1)",
+    reviewedAt:"13 May 2026, 10:14",
+    reviewNote:"Confirmed presence in classroom for both sessions. Attendance updated to Regularized.",
+  },
+];
+
 // ═══════════════════════════════════════════════════════════════
 // PHONE FRAME — desktop-only shell. Below 480px viewport, full-screen.
 // ═══════════════════════════════════════════════════════════════
@@ -734,7 +766,7 @@ function SignSuccess({ mode, session, onHome }) {
 // ═══════════════════════════════════════════════════════════════
 // MY ATTENDANCE SCREEN
 // ═══════════════════════════════════════════════════════════════
-function MyAttendanceScreen({ onBack, onMenu }) {
+function MyAttendanceScreen({ onBack, onMenu, onRegularize }) {
   const [selected, setSelected] = useState(16);
   const [swipeOpen, setSwipeOpen] = useState(null);
   const day = DAYS[selected] || null;
@@ -778,7 +810,7 @@ function MyAttendanceScreen({ onBack, onMenu }) {
 
       {/* Day detail */}
       <div style={{ padding:"4px 16px 16px" }}>
-        <MobileDayDetail day={day} onSwipeClick={setSwipeOpen}/>
+        <MobileDayDetail day={day} onSwipeClick={setSwipeOpen} onRegularize={onRegularize}/>
       </div>
 
       {/* Legend */}
@@ -873,7 +905,7 @@ const navBtn = {
 };
 
 // ─── Mobile Day Detail ───────────────────────────────────────
-function MobileDayDetail({ day, onSwipeClick }) {
+function MobileDayDetail({ day, onSwipeClick, onRegularize }) {
   if (!day) return null;
   const eventIcons = { H:"🎉", W:"🌙", C:"🚫", A:"⚠️" };
 
@@ -896,7 +928,7 @@ function MobileDayDetail({ day, onSwipeClick }) {
           <h4 style={{ fontSize:14, fontWeight:700, color:T.navy, marginBottom:6 }}>{day.title}</h4>
           <p style={{ fontSize:11, color:T.textSec, lineHeight:1.5 }}>{day.note}</p>
           {day.regularization && (
-            <button style={{
+            <button onClick={()=>onRegularize?.(day)} style={{
               marginTop:14, padding:"9px 16px", borderRadius:10,
               background:T.kraft, border:"none", color:"#fff",
               fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:FONT,
@@ -1110,14 +1142,379 @@ function SwipeField({ l, v, mono, span2 }) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// REGULARIZATION SCREEN
+// ═══════════════════════════════════════════════════════════════
+function RegularizationScreen({ onBack, onMenu, requests, onSubmit, presetDay, onClearPreset }) {
+  const [tab, setTab] = useState("apply");
+  const [applyOpen, setApplyOpen] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  // Open preset day on mount (when navigated from My Attendance "Raise Request" CTA)
+  useEffect(() => {
+    if (presetDay) {
+      const elig = ELIGIBLE_DAYS.find(e => e.d === presetDay.d);
+      if (elig) {
+        setApplyOpen(elig);
+        setTab("apply");
+      }
+      onClearPreset?.();
+    }
+  }, [presetDay, onClearPreset]);
+
+  const pending = requests.filter(r => r.status === "pending");
+  const closed  = requests.filter(r => r.status !== "pending");
+
+  const handleSubmit = (data) => {
+    onSubmit(data);
+    setApplyOpen(null);
+    setTab("pending");
+    setToast({ kind:"success", msg:"Request submitted · Instructor will review within 24h" });
+    setTimeout(()=>setToast(null), 3500);
+  };
+
+  return (
+    <div style={{ background:T.bg, minHeight:"100%", animation:"fadeIn 0.3s ease" }}>
+      <MobileHeader title="Regularization" sticky
+        left={I.back} onLeft={onBack}
+        right={I.menu} onRight={onMenu}
+      />
+
+      {/* Identity strip */}
+      <div style={{ padding:"12px 16px 14px", background:`linear-gradient(135deg,${T.kraft},#FF6B4A)`, color:"#fff" }}>
+        <p style={{ fontSize:11, opacity:0.85, marginBottom:2 }}>Regularization requests</p>
+        <p style={{ fontSize:15, fontWeight:700 }}>{LEARNER.name}</p>
+        <p style={{ fontSize:10, opacity:0.85, marginTop:1 }}>{LEARNER.rollNo} · {LEARNER.batch}</p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ background:T.white, borderBottom:`1px solid ${T.border}`, display:"flex", position:"sticky", top:48, zIndex:5 }}>
+        {[
+          { id:"apply",   label:"Apply",   count:ELIGIBLE_DAYS.length },
+          { id:"pending", label:"Pending", count:pending.length },
+          { id:"history", label:"History", count:closed.length },
+        ].map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{
+              flex:1, padding:"12px 8px", border:"none", background:"none",
+              borderBottom:tab===t.id?`3px solid ${T.kraft}`:"3px solid transparent",
+              color:tab===t.id?T.kraft:T.textSec,
+              fontSize:12, fontWeight:tab===t.id?700:600, cursor:"pointer", fontFamily:FONT,
+              display:"flex", alignItems:"center", justifyContent:"center", gap:6,
+            }}>
+            {t.label}
+            {t.count > 0 && (
+              <span style={{
+                padding:"1px 6px", borderRadius:10,
+                background:tab===t.id?T.kraft:T.borderLight,
+                color:tab===t.id?"#fff":T.textSec,
+                fontSize:10, fontWeight:700,
+              }}>{t.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Apply tab */}
+      {tab === "apply" && (
+        <div style={{ padding:"14px 16px" }}>
+          <div style={{ padding:"12px 14px", background:T.kraftPale, borderRadius:12, border:`1px solid ${T.kraft}30`, marginBottom:14 }}>
+            <p style={{ fontSize:11, color:T.kraftDark, lineHeight:1.55 }}>
+              <strong>How regularization works:</strong> pick a day with an exception
+              (Absent / Late / Half-Day), tell us what happened, and your instructor
+              reviews within 24h. Requests must be filed within 48h of the session.
+            </p>
+          </div>
+
+          <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>
+            Days available · {ELIGIBLE_DAYS.length}
+          </p>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {ELIGIBLE_DAYS.map(d => (
+              <button key={d.d} onClick={()=>setApplyOpen(d)}
+                style={{
+                  display:"flex", alignItems:"center", gap:12, width:"100%",
+                  padding:"12px 14px", background:T.white,
+                  border:`1px solid ${T.border}`, borderRadius:12,
+                  cursor:"pointer", textAlign:"left", fontFamily:FONT, transition:"all 0.15s",
+                }}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor=T.kraft+"55"; e.currentTarget.style.background=T.kraftPale}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border; e.currentTarget.style.background=T.white}}>
+                <span style={{
+                  width:36, height:36, borderRadius:9,
+                  background:STATUS[d.status].bg, color:STATUS[d.status].fg,
+                  border:`1px solid ${STATUS[d.status].border}`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:13, fontWeight:800, flexShrink:0,
+                }}>{STATUS[d.status].code}</span>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <p style={{ fontSize:13, fontWeight:700, color:T.navy }}>{d.weekday}, {d.date.split(" ").slice(0,2).join(" ")}</p>
+                  <p style={{ fontSize:11, color:T.textSec, marginTop:1, lineHeight:1.4 }}>{d.note}</p>
+                </div>
+                <span style={{ color:T.kraft, flexShrink:0 }}>{I.cR}</span>
+              </button>
+            ))}
+          </div>
+
+          <p style={{ fontSize:11, color:T.textMuted, textAlign:"center", marginTop:18, lineHeight:1.5 }}>
+            Don't see your day? It might be past the 48-hour window,<br/>
+            or doesn't qualify. <strong style={{ color:T.kraft }}>Contact your instructor.</strong>
+          </p>
+        </div>
+      )}
+
+      {/* Pending tab */}
+      {tab === "pending" && (
+        <div style={{ padding:"14px 16px" }}>
+          {pending.length === 0 ? (
+            <EmptyState icon="⏳" title="No pending requests" note="Submitted requests appear here while they're being reviewed (instructor SLA is 24h)."/>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {pending.map(r => <RequestCard key={r.id} request={r}/>)}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* History tab */}
+      {tab === "history" && (
+        <div style={{ padding:"14px 16px" }}>
+          {closed.length === 0 ? (
+            <EmptyState icon="📋" title="No past requests" note="Approved and rejected requests will appear here."/>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {closed.map(r => <RequestCard key={r.id} request={r}/>)}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{ height:30 }}/>
+
+      {applyOpen && <ApplyForm day={applyOpen} onClose={()=>setApplyOpen(null)} onSubmit={handleSubmit}/>}
+      {toast && <Toast {...toast}/>}
+    </div>
+  );
+}
+
+// ─── Apply form (bottom sheet) ───────────────────────────
+function ApplyForm({ day, onClose, onSubmit }) {
+  const [reason, setReason] = useState(REASON_TYPES[0]);
+  const [details, setDetails] = useState("");
+  const [sessions, setSessions] = useState("Both sessions");
+  const canSubmit = details.trim().length >= 10;
+
+  const submit = () => {
+    if (!canSubmit) return;
+    onSubmit({
+      forDate: day.date,
+      forDateLabel: `${day.weekday}, ${day.date.split(" ").slice(0,2).join(" ")}`,
+      reasonType: reason,
+      details,
+      sessions,
+    });
+  };
+
+  return (
+    <div onClick={onClose} style={{
+      position:"absolute", inset:0, background:"rgba(27,37,89,0.45)", backdropFilter:"blur(2px)",
+      zIndex:60, display:"flex", alignItems:"flex-end", animation:"fadeIn 0.2s ease",
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:T.white, width:"100%", borderTopLeftRadius:24, borderTopRightRadius:24,
+        padding:"14px 18px 24px", animation:"slideUp 0.3s ease",
+        maxHeight:"94%", overflowY:"auto",
+      }}>
+        <div style={{ width:42, height:5, background:T.border, borderRadius:3, margin:"0 auto 14px" }}/>
+
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+          <h3 style={{ fontSize:16, fontWeight:700, color:T.navy }}>Apply for Regularization</h3>
+          <button onClick={onClose} style={{ background:"none", border:"none", color:T.textSec, cursor:"pointer", padding:4 }}>{I.close}</button>
+        </div>
+        <p style={{ fontSize:11, color:T.textSec, marginBottom:14 }}>
+          Your instructor will see this and approve or reject within 24h.
+        </p>
+
+        {/* Day card */}
+        <div style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", background:STATUS[day.status].bg, borderRadius:10, border:`1px solid ${STATUS[day.status].border}`, marginBottom:14 }}>
+          <span style={{
+            width:32, height:32, borderRadius:8, background:T.white, color:STATUS[day.status].fg,
+            border:`1px solid ${STATUS[day.status].border}`,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            fontSize:12, fontWeight:800, flexShrink:0,
+          }}>{STATUS[day.status].code}</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ fontSize:12, fontWeight:700, color:STATUS[day.status].fg }}>{day.weekday}, {day.date.split(" ").slice(0,2).join(" ")} 2026</p>
+            <p style={{ fontSize:10, color:STATUS[day.status].fg, opacity:0.85, marginTop:1, lineHeight:1.4 }}>{day.note}</p>
+          </div>
+        </div>
+
+        {/* Reason */}
+        <FormGroup label="Reason for regularization">
+          <select value={reason} onChange={e=>setReason(e.target.value)}
+            style={{
+              width:"100%", padding:"10px 12px", borderRadius:10,
+              border:`1px solid ${T.border}`, background:T.bg,
+              fontSize:13, color:T.text, fontFamily:FONT, cursor:"pointer",
+            }}>
+            {REASON_TYPES.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </FormGroup>
+
+        {/* Sessions */}
+        <FormGroup label="Sessions affected">
+          <div style={{ display:"flex", gap:8 }}>
+            {["Session 1","Session 2","Both sessions"].map(s => (
+              <button key={s} onClick={()=>setSessions(s)}
+                style={{
+                  flex:1, padding:"9px 6px", borderRadius:8,
+                  border:`1.5px solid ${sessions===s?T.kraft:T.border}`,
+                  background:sessions===s?T.kraftLight:T.white,
+                  color:sessions===s?T.kraft:T.textSec,
+                  fontSize:11, fontWeight:sessions===s?700:600,
+                  cursor:"pointer", fontFamily:FONT,
+                }}>{s}</button>
+            ))}
+          </div>
+        </FormGroup>
+
+        {/* Details */}
+        <FormGroup label={`Tell us what happened (${details.length}/500)`}>
+          <textarea value={details} onChange={e=>setDetails(e.target.value.slice(0,500))}
+            placeholder="e.g. I reached campus at 09:00 but my phone battery died. The instructor saw me in the room throughout Session 1…"
+            rows={5}
+            style={{
+              width:"100%", padding:"10px 12px", borderRadius:10,
+              border:`1px solid ${T.border}`, background:T.bg,
+              fontSize:13, color:T.text, resize:"none", lineHeight:1.4, fontFamily:FONT,
+            }}/>
+          {details.length > 0 && details.trim().length < 10 && (
+            <p style={{ fontSize:10, color:"#B66F00", marginTop:4 }}>Add a bit more context — at least 10 characters.</p>
+          )}
+        </FormGroup>
+
+        {/* Evidence — gimmick */}
+        <FormGroup label="Supporting evidence (optional)">
+          <button style={{
+            display:"flex", alignItems:"center", gap:8, width:"100%",
+            padding:"10px 12px", border:`1px dashed ${T.border}`, borderRadius:10,
+            background:T.bg, color:T.textSec, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:FONT,
+          }}>
+            <span>📎</span> Attach a screenshot or document
+          </button>
+          <p style={{ fontSize:10, color:T.textMuted, marginTop:5 }}>
+            e.g. metro delay screenshot, medical note, instructor confirmation
+          </p>
+        </FormGroup>
+
+        {/* Notice */}
+        <div style={{ padding:"10px 12px", background:T.kraftPale, borderRadius:10, marginBottom:14 }}>
+          <p style={{ fontSize:10, color:T.kraftDark, lineHeight:1.5 }}>
+            <strong>Heads up:</strong> your original sign-in/out timestamps stay on
+            record. If approved, the day moves to <strong>Regularized</strong> with
+            the instructor's note attached.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div style={{ display:"flex", gap:10 }}>
+          <button onClick={onClose} style={{
+            flex:1, padding:"12px 16px", borderRadius:12,
+            border:`1.5px solid ${T.border}`, background:T.white,
+            color:T.navy, fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:FONT,
+          }}>Cancel</button>
+          <button onClick={submit} disabled={!canSubmit} style={{
+            flex:2, padding:"12px 16px", borderRadius:12, border:"none",
+            background:canSubmit ? T.kraft : "#e9ebf0",
+            color:canSubmit ? "#fff" : T.textMuted,
+            fontSize:13, fontWeight:700, cursor:canSubmit?"pointer":"not-allowed", fontFamily:FONT,
+          }}>Submit Request</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FormGroup({ label, children }) {
+  return (
+    <div style={{ marginBottom:12 }}>
+      <p style={{ fontSize:11, fontWeight:700, color:T.navyLight, marginBottom:6 }}>{label}</p>
+      {children}
+    </div>
+  );
+}
+
+// ─── Request card (used in Pending + History tabs) ───────
+function RequestCard({ request }) {
+  const r = request;
+  const statusCfg = {
+    pending:  { bg:"#FFF4DB", fg:"#B66F00",   border:"#F1D693", label:"Pending Review" },
+    approved: { bg:"#E7FBF5", fg:"#02AC7D",   border:"#9DECC9", label:"Approved" },
+    rejected: { bg:"#FEE7E2", fg:T.kraftDark, border:"#FFB7A8", label:"Rejected" },
+  }[r.status];
+
+  return (
+    <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:12, overflow:"hidden" }}>
+      <div style={{ padding:"12px 14px", borderBottom:`1px solid ${T.borderLight}` }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:6, gap:8 }}>
+          <div style={{ flex:1, minWidth:0 }}>
+            <p style={{ fontSize:13, fontWeight:700, color:T.navy }}>{r.forDateLabel}</p>
+            <p style={{ fontSize:10, color:T.textSec, marginTop:1 }}>{r.id} · {r.sessions} · Applied {r.appliedOn}</p>
+          </div>
+          <span style={{
+            padding:"3px 9px", borderRadius:20, fontSize:10, fontWeight:700,
+            background:statusCfg.bg, color:statusCfg.fg, border:`1px solid ${statusCfg.border}`, whiteSpace:"nowrap",
+          }}>{statusCfg.label}</span>
+        </div>
+      </div>
+      <div style={{ padding:"12px 14px", background:T.bg }}>
+        <p style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Your reason</p>
+        <p style={{ fontSize:12, fontWeight:600, color:T.navy }}>{r.reasonType}</p>
+        <p style={{ fontSize:11, color:T.textSec, marginTop:4, lineHeight:1.5 }}>{r.details}</p>
+      </div>
+      {r.status !== "pending" && r.reviewer && (
+        <div style={{ padding:"12px 14px", borderTop:`1px solid ${T.borderLight}`, background:r.status==="approved" ? "#F0FCF7" : "#FFF6F4" }}>
+          <p style={{ fontSize:9, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Reviewer's note</p>
+          <p style={{ fontSize:11, color:T.navyLight, lineHeight:1.5 }}>{r.reviewNote}</p>
+          <p style={{ fontSize:10, color:T.textSec, marginTop:6 }}>— {r.reviewer} · {r.reviewedAt}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EmptyState({ icon, title, note }) {
+  return (
+    <div style={{ padding:"40px 24px", textAlign:"center", background:T.white, borderRadius:12, border:`1px solid ${T.border}` }}>
+      <div style={{ fontSize:38, marginBottom:10 }}>{icon}</div>
+      <h4 style={{ fontSize:14, fontWeight:700, color:T.navy, marginBottom:6 }}>{title}</h4>
+      <p style={{ fontSize:11, color:T.textSec, lineHeight:1.5 }}>{note}</p>
+    </div>
+  );
+}
+
+function Toast({ kind, msg }) {
+  return (
+    <div style={{
+      position:"absolute", top:62, left:"50%", transform:"translateX(-50%)",
+      padding:"10px 16px", borderRadius:12,
+      background:kind==="success" ? "#02AC7D" : T.kraft, color:"#fff",
+      fontSize:12, fontWeight:700, zIndex:80,
+      boxShadow:"0 8px 24px rgba(0,0,0,0.18)", maxWidth:"90%", textAlign:"center",
+      animation:"slideUp 0.3s ease",
+    }}>{msg}</div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SIDE DRAWER
 // ═══════════════════════════════════════════════════════════════
-function MobileDrawer({ open, onClose, onAttendance }) {
+function MobileDrawer({ open, onClose, onAttendance, onRegularization }) {
   const [attHover, setAttHover] = useState(false);
   const subItems = [
     { id:"my-att", label:"My Attendance", icon:I.calendar, live:true, action:onAttendance },
     { id:"swipes", label:"My Swipes",     icon:I.pin,      live:false },
-    { id:"reg",    label:"Regularization",icon:I.shield,   live:false },
+    { id:"reg",    label:"Regularization",icon:I.shield,   live:true, action:onRegularization },
   ];
   return (
     <>
@@ -1215,37 +1612,39 @@ function MobileDrawer({ open, onClose, onAttendance }) {
 // MAIN LEARNER APP
 // ═══════════════════════════════════════════════════════════════
 export default function LearnerApp() {
-  const [screen, setScreen]                = useState("home"); // home | signin | signout | success-in | success-out | attendance
-  const [activeSession, setActiveSession]  = useState(null);   // session being signed-in/out
+  const [screen, setScreen]                = useState("home"); // home | signin | signout | success-in | success-out | attendance | regularization
+  const [activeSession, setActiveSession]  = useState(null);
   const [drawerOpen, setDrawerOpen]        = useState(false);
-  const [geofence, setGeofence]            = useState(true);   // true = inside
-  // Session attendance state
-  const [sessionStates, setSessionStates] = useState({ 1:"completed", 2:"signed-in" });
+  const [geofence, setGeofence]            = useState(true);
+  const [sessionStates, setSessionStates]  = useState({ 1:"completed", 2:"signed-in" });
+  const [requests, setRequests]            = useState(MY_REGS_INITIAL);
+  const [regPreset, setRegPreset]          = useState(null);
 
-  const toSignIn = (n) => {
-    setActiveSession({ n, name: TODAY.sessions[n-1].name, timing: TODAY.sessions[n-1].timing });
-    setGeofence(true);
-    setScreen("signin");
+  const toSignIn  = (n) => { setActiveSession({ n, name:TODAY.sessions[n-1].name, timing:TODAY.sessions[n-1].timing }); setGeofence(true); setScreen("signin"); };
+  const toSignOut = (n) => { setActiveSession({ n, name:TODAY.sessions[n-1].name, timing:TODAY.sessions[n-1].timing }); setGeofence(true); setScreen("signout"); };
+  const confirmSignIn  = () => { setSessionStates(s => ({ ...s, [activeSession.n]:"signed-in" })); setScreen("success-in"); };
+  const confirmSignOut = () => { setSessionStates(s => ({ ...s, [activeSession.n]:"completed" })); setScreen("success-out"); };
+
+  const openRegularization = (day = null) => {
+    setRegPreset(day);
+    setScreen("regularization");
+    setDrawerOpen(false);
   };
-  const toSignOut = (n) => {
-    setActiveSession({ n, name: TODAY.sessions[n-1].name, timing: TODAY.sessions[n-1].timing });
-    setGeofence(true);
-    setScreen("signout");
-  };
-  const confirmSignIn = () => {
-    setSessionStates(s => ({ ...s, [activeSession.n]:"signed-in" }));
-    setScreen("success-in");
-  };
-  const confirmSignOut = () => {
-    setSessionStates(s => ({ ...s, [activeSession.n]:"completed" }));
-    setScreen("success-out");
+
+  const submitRequest = (data) => {
+    const newReq = {
+      id: `REG-2026-${String(1000 + requests.length + 7).padStart(4,"0")}`,
+      appliedOn: "Just now",
+      status: "pending",
+      ...data,
+    };
+    setRequests([newReq, ...requests]);
   };
 
   return (
     <>
       <Styles/>
       <PhoneFrame>
-        {/* All screens render inside the phone */}
         {screen === "home" && (
           <HomeScreen
             sessionStates={sessionStates}
@@ -1256,43 +1655,38 @@ export default function LearnerApp() {
           />
         )}
         {screen === "signin" && activeSession && (
-          <SignInScreen
-            mode="in"
-            session={activeSession}
-            geofenceInside={geofence}
-            onConfirm={confirmSignIn}
-            onCancel={()=>setScreen("home")}
-            onToggleFence={()=>setGeofence(v=>!v)}
-          />
+          <SignInScreen mode="in" session={activeSession} geofenceInside={geofence}
+            onConfirm={confirmSignIn} onCancel={()=>setScreen("home")} onToggleFence={()=>setGeofence(v=>!v)}/>
         )}
         {screen === "signout" && activeSession && (
-          <SignInScreen
-            mode="out"
-            session={activeSession}
-            geofenceInside={geofence}
-            onConfirm={confirmSignOut}
-            onCancel={()=>setScreen("home")}
-            onToggleFence={()=>setGeofence(v=>!v)}
-          />
+          <SignInScreen mode="out" session={activeSession} geofenceInside={geofence}
+            onConfirm={confirmSignOut} onCancel={()=>setScreen("home")} onToggleFence={()=>setGeofence(v=>!v)}/>
         )}
-        {screen === "success-in" && activeSession && (
-          <SignSuccess mode="in" session={activeSession} onHome={()=>setScreen("home")}/>
-        )}
-        {screen === "success-out" && activeSession && (
-          <SignSuccess mode="out" session={activeSession} onHome={()=>setScreen("home")}/>
-        )}
+        {screen === "success-in"  && activeSession && <SignSuccess mode="in"  session={activeSession} onHome={()=>setScreen("home")}/>}
+        {screen === "success-out" && activeSession && <SignSuccess mode="out" session={activeSession} onHome={()=>setScreen("home")}/>}
         {screen === "attendance" && (
           <MyAttendanceScreen
             onBack={()=>setScreen("home")}
             onMenu={()=>setDrawerOpen(true)}
+            onRegularize={openRegularization}
+          />
+        )}
+        {screen === "regularization" && (
+          <RegularizationScreen
+            onBack={()=>setScreen("home")}
+            onMenu={()=>setDrawerOpen(true)}
+            requests={requests}
+            onSubmit={submitRequest}
+            presetDay={regPreset}
+            onClearPreset={()=>setRegPreset(null)}
           />
         )}
 
-        {/* Drawer overlays */}
         <MobileDrawer
           open={drawerOpen}
           onClose={()=>setDrawerOpen(false)}
           onAttendance={()=>{ setScreen("attendance"); setDrawerOpen(false); }}
+          onRegularization={()=>openRegularization(null)}
         />
       </PhoneFrame>
     </>

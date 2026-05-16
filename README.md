@@ -49,6 +49,23 @@ URL hashes work too: `…/` for Admin, `…/#learner` for the mobile view.
    the mobile-adapted calendar/swipes view (same data as Admin's
    Attendance Info, adapted for a 390px screen).
 
+### Try this flow (Regularization — both sides)
+1. **As learner:** ☰ → **Attendance → Regularization**. You'll see 3 tabs
+   (Apply / Pending / History). On **Apply**, tap a day (try **11 May ·
+   Absent**), fill the form (reason dropdown, sessions, details ≥ 10 chars),
+   Submit → toast confirms and the request lands in **Pending**.
+2. **Same flow but from My Attendance:** ☰ → My Attendance → tap **11 May**
+   in the calendar → tap **+ Raise Regularization Request** → opens the
+   same form pre-filled with that day.
+3. **As admin:** flip the persona pill to 🖥 Admin → ☰ menu → hover
+   **Attendance** → click **Regularization**. You'll see the **Active** tab
+   with 2 pending requests (Vikram Joshi, Rahul Iyer) and **Closed** with 2
+   historical entries.
+4. Click **View Details** on any pending one → see the full request + the
+   3-step approval ladder (Learner → Instructor L1 → Coordinator L2). Hit
+   **Approve** or **Reject** → ConfirmModal asks for a note (required for
+   reject) → the request moves from Active to Closed with your note attached.
+
 ---
 
 ## What's in the prototype

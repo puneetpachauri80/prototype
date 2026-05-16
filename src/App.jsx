@@ -1392,6 +1392,445 @@ function AttendanceInfoPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// REGULARIZATIONS — review queue (Program Coordinator / Instructor)
+// ═══════════════════════════════════════════════════════════════
+
+const REVIEW_QUEUE_INITIAL = [
+  // Active (pending review)
+  {
+    id:"REG-2026-0007",
+    learner:{ name:"Vikram Joshi", rollNo:"L-2026-0147", avatar:"VJ" },
+    forDate:"14 May 2026", forDateLabel:"Thursday, 14 May 2026",
+    forStatus:"A",
+    appliedOn:"15 May 2026, 09:32 AM",
+    daysAgo:"23 hours ago",
+    reasonType:"I was present but forgot to check in",
+    details:"I reached campus at 09:00 sharp but my phone battery had died on the way. Priya saw me in the room throughout Session 1. I'd appreciate the day being marked Present.",
+    sessions:"Both sessions",
+    status:"pending",
+    level:"L1",
+  },
+  {
+    id:"REG-2026-0008",
+    learner:{ name:"Rahul Iyer", rollNo:"L-2026-0145", avatar:"RI" },
+    forDate:"11 May 2026", forDateLabel:"Monday, 11 May 2026",
+    forStatus:"L",
+    appliedOn:"12 May 2026, 08:15 AM",
+    daysAgo:"5 days ago",
+    reasonType:"I was late but had a valid reason",
+    details:"Sign-in at 09:23 was due to a metro delay (Yellow Line halted for 18 min). I have the DMRC notification screenshot attached. Requesting Late be excused.",
+    sessions:"Session 1",
+    status:"pending",
+    level:"L1",
+    evidence:"DMRC-yellow-line-delay.png",
+  },
+  // Closed
+  {
+    id:"REG-2026-0005",
+    learner:{ name:"Sneha Gupta", rollNo:"L-2026-0146", avatar:"SG" },
+    forDate:"08 May 2026", forDateLabel:"Friday, 08 May 2026",
+    forStatus:"P",
+    appliedOn:"09 May 2026, 11:00 AM",
+    reasonType:"I checked in but wasn't verified",
+    details:"I signed in at 08:55 (geofence ✓) but the instructor's panel showed Not Yet because she missed my row. Confirming I was present and in the room throughout both sessions.",
+    sessions:"Both sessions",
+    status:"approved",
+    reviewer:"Priya Kothari (Instructor · L1)",
+    reviewedAt:"09 May 2026, 13:20 PM",
+    reviewNote:"Confirmed via session recording — learner was visible in classroom throughout. Verification updated.",
+  },
+  {
+    id:"REG-2026-0003",
+    learner:{ name:"Karan Khanna", rollNo:"L-2026-0149", avatar:"KK" },
+    forDate:"06 May 2026", forDateLabel:"Wednesday, 06 May 2026",
+    forStatus:"A",
+    appliedOn:"08 May 2026, 19:00 PM",
+    reasonType:"I was present but forgot to check in",
+    details:"Forgot to tap sign-in. Was in class with everyone.",
+    sessions:"Both sessions",
+    status:"rejected",
+    reviewer:"Priya Kothari (Instructor · L1)",
+    reviewedAt:"09 May 2026, 09:00 AM",
+    reviewNote:"Filed beyond the 48-hour window per policy. Instructor cannot approve at L1 — please escalate to Program Coordinator if you'd like to dispute.",
+  },
+];
+
+const ghostBtnStyle = {
+  padding:"8px 14px", borderRadius:8,
+  border:`1px solid ${T.border}`, background:T.white,
+  color:T.navy, fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:FONT,
+};
+
+// ─── REVIEW REQUEST CARD ─────────────────────────────────
+function ReviewRequestCard({ request, onView, onReject, onApprove }) {
+  const r = request;
+  const isPending = r.status === "pending";
+  const statusCfg = {
+    pending:  { bg:"#FFF4DB", fg:"#B66F00",   border:"#F1D693", label:"Pending Review" },
+    approved: { bg:"#E7FBF5", fg:"#02AC7D",   border:"#9DECC9", label:"Approved" },
+    rejected: { bg:"#FEE7E2", fg:T.kraftDark, border:"#FFB7A8", label:"Rejected" },
+  }[r.status];
+
+  return (
+    <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:T.radius, boxShadow:T.shadow, overflow:"hidden", marginBottom:12, transition:"all 0.2s" }}
+      onMouseEnter={e=>e.currentTarget.style.boxShadow=T.shadowHover}
+      onMouseLeave={e=>e.currentTarget.style.boxShadow=T.shadow}>
+      {/* Header row */}
+      <div style={{ padding:"14px 20px", display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:14, borderBottom:`1px solid ${T.borderLight}` }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12, minWidth:0, flex:1 }}>
+          <div style={{ width:42, height:42, borderRadius:11, background:T.borderLight, color:T.navyLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800, flexShrink:0 }}>{r.learner.avatar}</div>
+          <div style={{ minWidth:0 }}>
+            <p style={{ fontSize:14, fontWeight:700, color:T.navy }}>{r.learner.name}</p>
+            <p style={{ fontSize:11, color:T.textSec, marginTop:1 }}>{r.learner.rollNo} · {r.sessions}</p>
+          </div>
+        </div>
+        <div style={{ textAlign:"right", flexShrink:0 }}>
+          <span style={{
+            padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:700,
+            background:statusCfg.bg, color:statusCfg.fg, border:`1px solid ${statusCfg.border}`,
+            display:"inline-block", marginBottom:5,
+          }}>{statusCfg.label}</span>
+          <p style={{ fontSize:10, color:T.textMuted, fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>{r.id}</p>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding:"14px 20px", display:"grid", gridTemplateColumns:"170px 1fr", gap:"8px 16px", fontSize:12 }}>
+        <span style={{ color:T.textSec, fontWeight:600 }}>Date in question</span>
+        <span style={{ color:T.navy, display:"inline-flex", alignItems:"center", gap:8 }}>
+          {r.forDateLabel} <StatusChip code={r.forStatus}/>
+        </span>
+        <span style={{ color:T.textSec, fontWeight:600 }}>Applied</span>
+        <span style={{ color:T.navy }}>
+          {r.appliedOn}{isPending && r.daysAgo ? <span style={{ color:T.textMuted }}> · {r.daysAgo}</span> : null}
+        </span>
+        <span style={{ color:T.textSec, fontWeight:600 }}>Reason</span>
+        <span style={{ color:T.navy, fontWeight:600 }}>{r.reasonType}</span>
+        <span style={{ color:T.textSec, fontWeight:600, alignSelf:"flex-start" }}>Details</span>
+        <span style={{ color:T.navyLight, lineHeight:1.5 }}>"{r.details}"</span>
+        {r.evidence && (
+          <>
+            <span style={{ color:T.textSec, fontWeight:600 }}>Evidence</span>
+            <a href="#" onClick={e=>e.preventDefault()} style={{ color:T.blue, textDecoration:"underline" }}>📎 {r.evidence}</a>
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      {isPending ? (
+        <div style={{ padding:"12px 20px", borderTop:`1px solid ${T.borderLight}`, background:T.bg, display:"flex", justifyContent:"flex-end", gap:8 }}>
+          <button onClick={onView} style={ghostBtnStyle}>View Details</button>
+          <button onClick={onReject} style={{...ghostBtnStyle, color:T.kraftDark, borderColor:"#FFB7A8"}}>Reject</button>
+          <button onClick={onApprove} style={{ padding:"8px 18px", borderRadius:8, border:"none", background:T.kraft, color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>Approve</button>
+        </div>
+      ) : r.reviewer && (
+        <div style={{ padding:"12px 20px", borderTop:`1px solid ${T.borderLight}`, background:r.status==="approved" ? "#F0FCF7" : "#FFF6F4" }}>
+          <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:0.6, marginBottom:4 }}>Reviewer's note</p>
+          <p style={{ fontSize:12, color:T.navyLight, lineHeight:1.5 }}>{r.reviewNote}</p>
+          <p style={{ fontSize:11, color:T.textSec, marginTop:6 }}>— {r.reviewer} · {r.reviewedAt}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Approval-ladder step ────────────────────────────────
+function LadderStep({ n, label, done, active, meta }) {
+  const color = done ? "#02AC7D" : active ? T.kraft : T.textMuted;
+  const bg    = done ? "#E7FBF5" : active ? T.kraftLight : T.borderLight;
+  return (
+    <div style={{ display:"flex", alignItems:"flex-start", gap:12 }}>
+      <div style={{ width:26, height:26, borderRadius:"50%", background:bg, color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, flexShrink:0, marginTop:1 }}>
+        {done ? "✓" : n}
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <p style={{ fontSize:13, fontWeight:600, color: done || active ? T.navy : T.textSec }}>{label}</p>
+        {meta && <p style={{ fontSize:11, color:T.textSec, marginTop:2 }}>{meta}</p>}
+      </div>
+    </div>
+  );
+}
+
+function ReviewSection({ title, children }) {
+  return (
+    <div style={{ marginBottom:18 }}>
+      <p style={{ fontSize:10, fontWeight:700, color:T.textMuted, textTransform:"uppercase", letterSpacing:1, marginBottom:8 }}>{title}</p>
+      {children}
+    </div>
+  );
+}
+
+// ─── Details Modal ───────────────────────────────────────
+function DetailsModal({ request, onClose, onApprove, onReject }) {
+  const r = request;
+  const isPending = r.status === "pending";
+
+  return (
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(27,37,89,0.5)", backdropFilter:"blur(2px)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn 0.2s ease" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:T.white, borderRadius:T.radius, maxWidth:720, width:"100%", maxHeight:"92vh", overflowY:"auto", boxShadow:"0 20px 60px rgba(27,37,89,0.3)", animation:"scaleIn 0.25s ease" }}>
+        <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", padding:"18px 24px", borderBottom:`1px solid ${T.border}`, gap:12, position:"sticky", top:0, background:T.white, zIndex:1 }}>
+          <div>
+            <h3 style={{ fontSize:17, fontWeight:700, color:T.navy }}>Request Details</h3>
+            <p style={{ fontSize:12, color:T.textSec, marginTop:2, fontFamily:"ui-monospace, SFMono-Regular, monospace" }}>{r.id}</p>
+          </div>
+          <div onClick={onClose} style={{ width:32, height:32, borderRadius:8, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color:T.textSec }}
+            onMouseEnter={e=>{e.currentTarget.style.background=T.borderLight;e.currentTarget.style.color=T.kraft}}
+            onMouseLeave={e=>{e.currentTarget.style.background="transparent";e.currentTarget.style.color=T.textSec}}>
+            {I.xClose}
+          </div>
+        </div>
+
+        <div style={{ padding:"22px 24px" }}>
+          <ReviewSection title="Learner">
+            <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ width:48, height:48, borderRadius:12, background:T.borderLight, color:T.navyLight, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:800 }}>{r.learner.avatar}</div>
+              <div>
+                <p style={{ fontSize:14, fontWeight:700, color:T.navy }}>{r.learner.name}</p>
+                <p style={{ fontSize:12, color:T.textSec, marginTop:1 }}>{r.learner.rollNo} · PGP AI-Led Marketing · Batch 1</p>
+              </div>
+            </div>
+          </ReviewSection>
+
+          <ReviewSection title="Date in question">
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:4, flexWrap:"wrap" }}>
+              <span style={{ fontSize:14, fontWeight:600, color:T.navy }}>{r.forDateLabel}</span>
+              <StatusChip code={r.forStatus}/>
+            </div>
+            <p style={{ fontSize:12, color:T.textSec, marginTop:6 }}>
+              Original record: {r.forStatus === "A" ? "Absent — no sign-in detected within the geofence" : r.forStatus === "L" ? "Late — sign-in after the grace window" : r.forStatus === "HD" ? "Half Day — early departure below 50% threshold" : "Recorded status"}.
+            </p>
+          </ReviewSection>
+
+          <ReviewSection title="Request">
+            <div style={{ display:"grid", gridTemplateColumns:"160px 1fr", gap:"8px 14px", fontSize:13 }}>
+              <span style={{ color:T.textSec }}>Filed on</span>
+              <span style={{ color:T.navy }}>{r.appliedOn}{r.daysAgo ? <span style={{ color:T.textMuted }}> · {r.daysAgo}</span> : null}</span>
+              <span style={{ color:T.textSec }}>Sessions affected</span>
+              <span style={{ color:T.navy }}>{r.sessions}</span>
+              <span style={{ color:T.textSec }}>Reason</span>
+              <span style={{ color:T.navy, fontWeight:600 }}>{r.reasonType}</span>
+              <span style={{ color:T.textSec, alignSelf:"flex-start" }}>Details</span>
+              <p style={{ color:T.navyLight, lineHeight:1.55, fontSize:13 }}>"{r.details}"</p>
+              {r.evidence && (
+                <>
+                  <span style={{ color:T.textSec }}>Evidence</span>
+                  <a href="#" onClick={e=>e.preventDefault()} style={{ color:T.blue, textDecoration:"underline" }}>📎 {r.evidence}</a>
+                </>
+              )}
+            </div>
+          </ReviewSection>
+
+          <ReviewSection title="Approval ladder">
+            <div style={{ display:"flex", flexDirection:"column", gap:10, padding:"12px 14px", background:T.bg, borderRadius:T.radiusSm, border:`1px solid ${T.border}` }}>
+              <LadderStep n={1} label="Learner files request" done meta={r.appliedOn}/>
+              <LadderStep n={2} label="Instructor (L1) reviews" done={!isPending} active={isPending}
+                meta={isPending ? "Pending · SLA 24h from filing" : `${r.reviewedAt} · ${r.status==="approved" ? "Approved" : "Rejected"}`}/>
+              <LadderStep n={3} label="Program Coordinator (L2)"
+                meta={isPending ? "Only invoked if learner escalates after L1 rejection" : (r.status==="approved" ? "Not required" : "Available if learner escalates")}/>
+            </div>
+          </ReviewSection>
+
+          {!isPending && r.reviewer && (
+            <ReviewSection title="Decision">
+              <div style={{ padding:"14px 16px", borderRadius:10, background:r.status==="approved" ? "#F0FCF7" : "#FFF6F4", border:`1px solid ${r.status==="approved" ? "#9DECC9" : "#FFB7A8"}` }}>
+                <p style={{ fontSize:13, color:T.navyLight, lineHeight:1.55 }}>{r.reviewNote}</p>
+                <p style={{ fontSize:11, color:T.textSec, marginTop:8 }}>— {r.reviewer} · {r.reviewedAt}</p>
+              </div>
+            </ReviewSection>
+          )}
+
+          <div style={{ padding:"12px 14px", background:T.kraftPale, borderRadius:T.radiusSm, border:`1px solid ${T.kraft}30` }}>
+            <p style={{ fontSize:11, color:T.kraftDark, lineHeight:1.55 }}>
+              <strong>Data integrity:</strong> the learner's original sign-in/out
+              timestamps are never deleted. Approval adds a verification overlay
+              and an instructor note; the audit trail stays intact.
+            </p>
+          </div>
+        </div>
+
+        {isPending ? (
+          <div style={{ padding:"14px 24px", borderTop:`1px solid ${T.border}`, display:"flex", justifyContent:"flex-end", gap:10, background:T.bg, position:"sticky", bottom:0 }}>
+            <button onClick={onClose} style={ghostBtnStyle}>Close</button>
+            <button onClick={onReject} style={{...ghostBtnStyle, color:T.kraftDark, borderColor:"#FFB7A8"}}>Reject</button>
+            <button onClick={onApprove} style={{ padding:"8px 22px", borderRadius:8, border:"none", background:T.kraft, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>Approve</button>
+          </div>
+        ) : (
+          <div style={{ padding:"14px 24px", borderTop:`1px solid ${T.border}`, display:"flex", justifyContent:"flex-end", background:T.bg }}>
+            <button onClick={onClose} style={{ padding:"8px 22px", borderRadius:8, border:"none", background:T.kraft, color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:FONT }}>Close</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Confirm action modal ────────────────────────────────
+function ConfirmModal({ action, request, onCancel, onConfirm }) {
+  const [note, setNote] = useState("");
+  const isApprove = action === "approved";
+  const canSubmit = isApprove || note.trim().length >= 5;
+
+  return (
+    <div onClick={onCancel} style={{ position:"fixed", inset:0, background:"rgba(27,37,89,0.5)", backdropFilter:"blur(2px)", zIndex:310, display:"flex", alignItems:"center", justifyContent:"center", padding:20, animation:"fadeIn 0.2s ease" }}>
+      <div onClick={e=>e.stopPropagation()} style={{ background:T.white, borderRadius:T.radius, maxWidth:480, width:"100%", boxShadow:"0 20px 60px rgba(27,37,89,0.3)", animation:"scaleIn 0.25s ease" }}>
+        <div style={{ padding:"18px 24px 14px", borderBottom:`1px solid ${T.border}` }}>
+          <h3 style={{ fontSize:16, fontWeight:700, color:T.navy }}>{isApprove ? "Approve request?" : "Reject request?"}</h3>
+          <p style={{ fontSize:12, color:T.textSec, marginTop:3 }}>
+            {request.learner.name} · {request.forDateLabel}
+          </p>
+        </div>
+        <div style={{ padding:"18px 24px" }}>
+          <p style={{ fontSize:12, color:T.navyLight, lineHeight:1.55, marginBottom:14 }}>
+            {isApprove
+              ? "Marking as Regularized will update the attendance record. The original timestamp is preserved per data integrity rules."
+              : "The learner will be notified with your reason. They can escalate to the Program Coordinator if they disagree."}
+          </p>
+          <p style={{ fontSize:11, fontWeight:700, color:T.navyLight, marginBottom:6 }}>
+            Add a note ({isApprove ? "optional" : "required, min 5 chars"})
+          </p>
+          <textarea value={note} onChange={e=>setNote(e.target.value)} rows={4}
+            placeholder={isApprove
+              ? "e.g. Confirmed presence via session recording / classroom observation."
+              : "e.g. Filed beyond 48-hour window. Per policy, escalate to coordinator if needed."}
+            style={{ width:"100%", padding:"10px 12px", borderRadius:10, border:`1px solid ${T.border}`, background:T.bg, fontSize:13, color:T.text, resize:"none", lineHeight:1.4, fontFamily:FONT }}/>
+        </div>
+        <div style={{ padding:"14px 24px", borderTop:`1px solid ${T.border}`, display:"flex", justifyContent:"flex-end", gap:10 }}>
+          <button onClick={onCancel} style={ghostBtnStyle}>Cancel</button>
+          <button onClick={()=>onConfirm(note)} disabled={!canSubmit}
+            style={{
+              padding:"8px 22px", borderRadius:8, border:"none",
+              background: !canSubmit ? "#e9ebf0" : (isApprove ? "#02AC7D" : T.kraft),
+              color: !canSubmit ? T.textMuted : "#fff",
+              fontSize:13, fontWeight:700, cursor: !canSubmit ? "not-allowed" : "pointer",
+              fontFamily:FONT,
+            }}>
+            {isApprove ? "Approve" : "Reject"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Admin toast ─────────────────────────────────────────
+function AdminToast({ kind, msg }) {
+  return (
+    <div style={{
+      position:"fixed", top:80, right:24,
+      padding:"12px 20px", borderRadius:12,
+      background:kind==="approved" ? "#02AC7D" : T.kraft, color:"#fff",
+      fontSize:13, fontWeight:700, zIndex:400,
+      boxShadow:"0 8px 24px rgba(0,0,0,0.18)",
+      animation:"slideUp 0.3s ease",
+    }}>{msg}</div>
+  );
+}
+
+// ─── REGULARIZATION REVIEW PAGE ──────────────────────────
+function RegularizationsReviewPage() {
+  const [requests, setRequests] = useState(REVIEW_QUEUE_INITIAL);
+  const [tab, setTab]           = useState("active");
+  const [detail, setDetail]     = useState(null);
+  const [confirm, setConfirm]   = useState(null);
+  const [toast, setToast]       = useState(null);
+
+  const active = requests.filter(r => r.status === "pending");
+  const closed = requests.filter(r => r.status !== "pending");
+  const list   = tab === "active" ? active : closed;
+
+  const review = (id, action, note) => {
+    setRequests(rs => rs.map(r => r.id === id ? {
+      ...r,
+      status: action,
+      reviewer: "Priya Kothari (Instructor · L1)",
+      reviewedAt: "Just now",
+      reviewNote: note || (action==="approved"
+        ? "Approved based on instructor's classroom observation."
+        : "Rejected."),
+    } : r));
+    setConfirm(null);
+    setDetail(null);
+    setToast({ msg: action==="approved" ? "Request approved ✓ Learner notified." : "Request rejected. Learner notified.", kind: action });
+    setTimeout(()=>setToast(null), 3500);
+  };
+
+  return (
+    <div style={{ animation:"fadeIn 0.35s ease" }}>
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18, flexWrap:"wrap", gap:12 }}>
+        <div>
+          <h2 style={{ fontSize:22, fontWeight:700, color:T.navy }}>Regularization Requests</h2>
+          <p style={{ fontSize:14, color:T.textSec, marginTop:4 }}>
+            {active.length} pending review · {closed.length} closed this month · L1 instructor approval, L2 coordinator escalation
+          </p>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+          <SmallBtn>📅 Date range</SmallBtn>
+          <SmallBtn>🔍 Search learner</SmallBtn>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display:"inline-flex", gap:0, marginBottom:14, background:T.white, padding:4, borderRadius:T.radiusSm, border:`1px solid ${T.border}` }}>
+        {[
+          { id:"active", label:"Active", count:active.length },
+          { id:"closed", label:"Closed", count:closed.length },
+        ].map(t => (
+          <button key={t.id} onClick={()=>setTab(t.id)}
+            style={{
+              padding:"7px 16px", borderRadius:6, border:"none",
+              background:tab===t.id?T.kraftLight:"transparent",
+              color:tab===t.id?T.kraft:T.textSec,
+              fontSize:13, fontWeight:tab===t.id?700:600,
+              cursor:"pointer", fontFamily:FONT,
+              display:"inline-flex", alignItems:"center", gap:7,
+            }}>
+            {t.label}
+            <span style={{
+              padding:"1px 8px", borderRadius:10, fontSize:11, fontWeight:700,
+              background:tab===t.id?T.kraft:T.borderLight, color:tab===t.id?"#fff":T.textSec,
+            }}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* List */}
+      {list.length === 0 ? (
+        <div style={{ padding:"60px 30px", textAlign:"center", background:T.white, borderRadius:T.radius, border:`1px solid ${T.border}` }}>
+          <div style={{ fontSize:42, marginBottom:12 }}>{tab==="active" ? "✅" : "📋"}</div>
+          <h4 style={{ fontSize:16, fontWeight:700, color:T.navy }}>{tab==="active" ? "Nothing pending" : "No closed requests yet"}</h4>
+          <p style={{ fontSize:13, color:T.textSec, marginTop:6, maxWidth:380, margin:"6px auto 0" }}>
+            {tab==="active"
+              ? "All caught up — no regularization requests waiting on instructor review."
+              : "Approved and rejected requests will land here once you've actioned them."}
+          </p>
+        </div>
+      ) : (
+        <div>
+          {list.map(r => (
+            <ReviewRequestCard key={r.id} request={r}
+              onView={()=>setDetail(r)}
+              onApprove={()=>setConfirm({ id:r.id, action:"approved", request:r })}
+              onReject={()=>setConfirm({ id:r.id, action:"rejected", request:r })}
+            />
+          ))}
+        </div>
+      )}
+
+      {detail && <DetailsModal request={detail} onClose={()=>setDetail(null)}
+        onApprove={()=>setConfirm({ id:detail.id, action:"approved", request:detail })}
+        onReject={()=>setConfirm({ id:detail.id, action:"rejected", request:detail })}/>}
+
+      {confirm && <ConfirmModal {...confirm}
+        onCancel={()=>setConfirm(null)}
+        onConfirm={(note)=>review(confirm.id, confirm.action, note)}/>}
+
+      {toast && <AdminToast {...toast}/>}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
 // HOMEPAGE
 // ═══════════════════════════════════════════════════════════════
 function HomePage() {
@@ -1519,7 +1958,7 @@ function SidePanel({ open, onClose, onSelect }) {
   const [attHover, setAttHover] = useState(false);
   const subItems = [
     { id:"swipes",         label:"Learner Swipes",     icon:I.swipe,     live:false },
-    { id:"regularization", label:"Regularization",     icon:I.shield,    live:false },
+    { id:"regularization", label:"Regularization",     icon:I.shield,    live:true  },
     { id:"muster",         label:"Attendance Muster",  icon:I.fileText,  live:false },
     { id:"info",           label:"Attendance Info",    icon:I.info,      live:true  },
   ];
@@ -1673,6 +2112,7 @@ function AdminApp() {
         onClose={()=>setSideOpen(false)}
         onSelect={(id)=>{
           if (id === "info") { setView("attendanceInfo"); setSideOpen(false); }
+          if (id === "regularization") { setView("regularizations"); setSideOpen(false); }
         }}
       />
       {/* Navbar */}
@@ -1720,6 +2160,12 @@ function AdminApp() {
                 <span style={{ color:T.textMuted }}>›</span>
                 <span style={{ color:T.kraft,fontWeight:700 }}>Attendance Info</span>
               </>
+            ) : view==="regularizations" ? (
+              <>
+                <span style={{ color:T.navy,fontWeight:600 }}>Attendance</span>
+                <span style={{ color:T.textMuted }}>›</span>
+                <span style={{ color:T.kraft,fontWeight:700 }}>Regularization Requests</span>
+              </>
             ) : (
               <>
                 <span onClick={()=>setView("settings")} style={{ color:view==="settings"?T.navy:T.textMuted,cursor:"pointer",fontWeight:view==="settings"?600:500 }} onMouseEnter={e=>e.currentTarget.style.color=T.kraft} onMouseLeave={e=>e.currentTarget.style.color=view==="settings"?T.navy:T.textMuted}>Settings</span>
@@ -1732,6 +2178,7 @@ function AdminApp() {
         {view==="settings" && <SettingsPage onNavigate={nav}/>}
         {view==="attendance" && <AttendancePage activePage={attPage} onPageChange={setAttPage}/>}
         {view==="attendanceInfo" && <AttendanceInfoPage/>}
+        {view==="regularizations" && <RegularizationsReviewPage/>}
       </div>
     </div>
   );
